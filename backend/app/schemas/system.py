@@ -27,6 +27,12 @@ class BudgetPaymentCreate(BaseModel):
     reference: str | None = None
     notes: str | None = None
 
+class BudgetPaymentUpdate(BaseModel):
+    payment_amount: float | None = None
+    payment_date: str | None = None
+    reference: str | None = None
+    notes: str | None = None
+
 class BudgetPaymentResponse(BaseModel):
     id: UUID
     project_id: UUID

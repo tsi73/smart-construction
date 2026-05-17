@@ -8,7 +8,7 @@ from app.models.user import User
 from app.models.commons import ProjectRole
 from app.models.system import BudgetItem, BudgetPayment
 from app.models.project import Project
-from app.schemas.system import BudgetItemCreate, BudgetItemResponse, BudgetSummary, BudgetPaymentCreate, BudgetPaymentResponse
+from app.schemas.system import BudgetItemCreate, BudgetItemResponse, BudgetSummary, BudgetPaymentCreate, BudgetPaymentResponse, BudgetPaymentUpdate
 from app.repositories.project import ProjectRepository
 
 router = APIRouter()
@@ -103,3 +103,73 @@ async def list_budget_payments(
         .order_by(BudgetPayment.created_at.desc())
     )
     return list(result.scalars().all())
+
+
+@router.get(
+    "/{project_id}/budget-payments/{payment_id}",
+    response_model=BudgetPaymentResponse,
+    summary="Get a single client payment",
+)
+async def get_budget_payment(
+    project_id: UUID, payment_id: UUID, db: DbSession,
+    _: User = Depends(get_current_active_user),
+) -> Any:
+    result = await db.execute(
+        select(BudgetPayment).where(
+            BudgetPayment.id == payment_id,
+            BudgetPayment.project_id == project_id,
+        )
+    )
+    payment = result.scalars().first()
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    return payment
+
+
+@router.put(
+    "/{project_id}/budget-payments/{payment_id}",
+    response_model=BudgetPaymentResponse,
+    summary="Update a client payment",
+    dependencies=[Depends(require_project_role([ProjectRole.PROJECT_MANAGER, ProjectRole.OFFICE_ENGINEER]))],
+)
+async def update_budget_payment(
+    *, db: DbSession, project_id: UUID, payment_id: UUID, payment_in: BudgetPaymentUpdate,
+) -> Any:
+    result = await db.execute(
+        select(BudgetPayment).where(
+            BudgetPayment.id == payment_id,
+            BudgetPayment.project_id == project_id,
+        )
+    )
+    payment = result.scalars().first()
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+
+    data = payment_in.model_dump(exclude_unset=True)
+    for field, value in data.items():
+        setattr(payment, field, value)
+    await db.commit()
+    await db.refresh(payment)
+    return payment
+
+
+@router.delete(
+    "/{project_id}/budget-payments/{payment_id}",
+    status_code=204,
+    summary="Delete a client payment",
+    dependencies=[Depends(require_project_role([ProjectRole.PROJECT_MANAGER, ProjectRole.OFFICE_ENGINEER]))],
+)
+async def delete_budget_payment(
+    *, db: DbSession, project_id: UUID, payment_id: UUID,
+) -> None:
+    result = await db.execute(
+        select(BudgetPayment).where(
+            BudgetPayment.id == payment_id,
+            BudgetPayment.project_id == project_id,
+        )
+    )
+    payment = result.scalars().first()
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    await db.delete(payment)
+    await db.commit()

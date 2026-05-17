@@ -26,22 +26,40 @@ import {
   Bot,
   CheckCircle2,
   BarChart3,
+  Calendar,
   Clock3,
-  CloudSun,
-  Droplets,
+  CloudRain,
+  HardHat,
   Loader2,
-  Thermometer,
+  Package,
   Settings,
-  ChevronDown,
+  TrendingDown,
+  TrendingUp,
+  Truck,
+  Wallet,
   FileText,
 } from 'lucide-react'
 import { useProjectRole } from '@/lib/project-role-context'
 import { useCurrency } from '@/lib/currency-context'
-import { getPrediction, getProject, getProjectBudget, getProjectDashboard, getWeather, listProjectLogs, listProjectTasks } from '@/lib/api'
-import type { BudgetSummary, LogListItem, PredictionResponse, ProjectDetail, TaskListItem, WeatherResponse } from '@/lib/api-types'
+import { getComprehensiveAnalytics, getPrediction, getProject, getProjectBudget, getWeather, listProjectLogs, listProjectTasks } from '@/lib/api'
+import type { BudgetSummary, ComprehensiveAnalytics, LogListItem, PredictionResponse, ProjectDetail, TaskListItem, WeatherResponse } from '@/lib/api-types'
 import { WeatherForecastCard } from '@/components/weather-forecast-card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from 'recharts'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  PolarAngleAxis,
+  RadialBar,
+  RadialBarChart,
+  XAxis,
+  YAxis,
+} from 'recharts'
 
 interface DashboardPageProps {
   params: Promise<{ projectId: string }>
@@ -119,106 +137,48 @@ function formatCompactAmount(value: number) {
   return `${sign}${absolute.toLocaleString()}`
 }
 
-function getTaskStatusChartData(tasks: TaskListItem[]) {
-  return [
-    { name: 'Completed', value: tasks.filter((task) => task.status === 'completed').length, fill: '#10b981' },
-    { name: 'In Progress', value: tasks.filter((task) => task.status === 'in_progress').length, fill: '#f59e0b' },
-    { name: 'Pending', value: tasks.filter((task) => task.status === 'pending').length, fill: '#64748b' },
-  ].filter((item) => item.value > 0)
+type AnalyticsTone = 'good' | 'warning' | 'critical' | 'neutral'
+
+const toneStyles: Record<AnalyticsTone, { card: string; badge: string; valueText: string }> = {
+  good: {
+    card: 'border-emerald-200 bg-emerald-50/40 dark:border-emerald-900/40 dark:bg-emerald-950/20',
+    badge: 'bg-emerald-100 text-emerald-700',
+    valueText: 'text-emerald-700 dark:text-emerald-300',
+  },
+  warning: {
+    card: 'border-amber-200 bg-amber-50/40 dark:border-amber-900/40 dark:bg-amber-950/20',
+    badge: 'bg-amber-100 text-amber-700',
+    valueText: 'text-amber-700 dark:text-amber-300',
+  },
+  critical: {
+    card: 'border-red-200 bg-red-50/40 dark:border-red-900/40 dark:bg-red-950/20',
+    badge: 'bg-red-100 text-red-700',
+    valueText: 'text-red-700 dark:text-red-300',
+  },
+  neutral: {
+    card: 'border-slate-200 bg-slate-50/40 dark:border-slate-800 dark:bg-slate-900/30',
+    badge: 'bg-slate-100 text-slate-700',
+    valueText: 'text-slate-800 dark:text-slate-200',
+  },
 }
 
-function getTaskProgressChartData(tasks: TaskListItem[]) {
-  return [...tasks]
-    .sort((a, b) => (b.progress_percentage || 0) - (a.progress_percentage || 0))
-    .slice(0, 6)
-    .map((task) => ({
-      name: task.title.length > 18 ? `${task.title.slice(0, 18)}…` : task.title,
-      progress: clamp(task.progress_percentage || 0, 0, 100),
-      remaining: clamp(100 - (task.progress_percentage || 0), 0, 100),
-    }))
-}
-
-function getLogTrendChartData(trendLogs: LogListItem[]) {
-  const recentLogs = [...trendLogs]
-    .sort((a, b) => +new Date(a.date) - +new Date(b.date))
-    .slice(-7)
-
-  const grouped: Record<string, { submitted: number; consultant_approved: number; pm_approved: number; rejected: number }> = {}
-
-  recentLogs.forEach((log) => {
-    const day = new Date(log.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    if (!grouped[day]) {
-      grouped[day] = { submitted: 0, consultant_approved: 0, pm_approved: 0, rejected: 0 }
-    }
-
-    switch (log.status) {
-      case 'submitted':
-        grouped[day].submitted += 1
-        break
-      case 'consultant_approved':
-        grouped[day].consultant_approved += 1
-        break
-      case 'pm_approved':
-        grouped[day].pm_approved += 1
-        break
-      case 'rejected':
-        grouped[day].rejected += 1
-        break
-      default:
-        break
-    }
-  })
-
-  return Object.keys(grouped).map((day) => ({
-    day,
-    submitted: grouped[day].submitted,
-    consultant_approved: grouped[day].consultant_approved,
-    pm_approved: grouped[day].pm_approved,
-    rejected: grouped[day].rejected,
-  }))
-}
-
-function getResourceSpendData(logs: LogListItem[]) {
-  const manpower = logs.reduce(
-    (sum, log) => sum + (log.manpower_cost || 0),
-    0,
-  )
-  const materials = logs.reduce(
-    (sum, log) => sum + (log.materials_cost || 0),
-    0,
-  )
-  const equipment = logs.reduce(
-    (sum, log) => sum + (log.equipment_cost || 0),
-    0,
-  )
-
-  return [
-    { name: 'Labor', value: manpower, fill: '#0f766e' },
-    { name: 'Materials', value: materials, fill: '#2563eb' },
-    { name: 'Equipment', value: equipment, fill: '#9333ea' },
-  ]
-}
-
-const taskStatusChartConfig = {
-  completed: { label: 'Completed', color: '#10b981' },
-  in_progress: { label: 'In Progress', color: '#f59e0b' },
-  pending: { label: 'Pending', color: '#64748b' },
-}
-
-const taskProgressChartConfig = {
-  progress: { label: 'Progress', color: '#2563eb' },
-  remaining: { label: 'Remaining', color: '#e5e7eb' },
-}
-
-const logTrendChartConfig = {
-  submitted: { label: 'Submitted', color: '#f59e0b' },
-  consultant_approved: { label: 'Consultant Approved', color: '#8b5cf6' },
-  pm_approved: { label: 'PM Approved', color: '#10b981' },
-  rejected: { label: 'Rejected', color: '#ef4444' },
-}
-
-const resourceSpendChartConfig = {
-  value: { label: 'Cost', color: '#2563eb' },
+function statusTone(status: string | undefined): AnalyticsTone {
+  switch (status) {
+    case 'healthy':
+    case 'efficient':
+    case 'excellent':
+    case 'minimal':
+      return 'good'
+    case 'warning':
+    case 'moderate':
+    case 'inefficient':
+      return 'warning'
+    case 'critical':
+    case 'significant':
+      return 'critical'
+    default:
+      return 'neutral'
+  }
 }
 
 export default function DashboardPage({ params }: DashboardPageProps) {
@@ -230,12 +190,9 @@ export default function DashboardPage({ params }: DashboardPageProps) {
   const [tasks, setTasks] = useState<TaskListItem[]>([])
   const [logs, setLogs] = useState<LogListItem[]>([])
   const [prediction, setPrediction] = useState<PredictionResponse | null>(null)
+  const [analytics, setAnalytics] = useState<ComprehensiveAnalytics | null>(null)
   const [budgetSummary, setBudgetSummary] = useState<BudgetSummary | null>(null)
   const [weather, setWeather] = useState<WeatherResponse | null>(null)
-  const [dashboardSummary, setDashboardSummary] = useState<{
-    task_summary: { total: number; completed: number; in_progress: number; pending: number }
-    delay_risk_status: string
-  } | null>(null)
   const [loading, setLoading] = useState(true)
   const [predictionOpen, setPredictionOpen] = useState(false)
 
@@ -244,21 +201,27 @@ export default function DashboardPage({ params }: DashboardPageProps) {
       ; (async () => {
         setLoading(true)
         try {
-          // Only fetch prediction for Project Managers to speed up load
+          // Only fetch prediction + analytics for Project Managers to speed up load.
+          // Analytics returns the prediction inside it, so the dedicated prediction call
+          // is only kept as a quick fallback when comprehensive fails.
           const predictionPromise =
             userRole === 'project_manager'
               ? getPrediction(projectId).catch(() => null)
               : Promise.resolve<PredictionResponse | null>(null)
+          const analyticsPromise =
+            userRole === 'project_manager'
+              ? getComprehensiveAnalytics(projectId).catch(() => null)
+              : Promise.resolve<ComprehensiveAnalytics | null>(null)
 
-          const [projectResult, budgetResult, tasksResult, logsResult, dashboardResult, weatherResult, predictionResult] =
+          const [projectResult, budgetResult, tasksResult, logsResult, weatherResult, predictionResult, analyticsResult] =
             await Promise.all([
               getProject(projectId),
               getProjectBudget(projectId).catch(() => null),
               listProjectTasks(projectId, { limit: 100 }),
               listProjectLogs(projectId, { limit: 100 }),
-              getProjectDashboard(projectId).catch(() => null),
               getWeather(projectId).catch(() => null),
               predictionPromise,
+              analyticsPromise,
             ] as const)
 
           if (cancelled) return
@@ -266,15 +229,16 @@ export default function DashboardPage({ params }: DashboardPageProps) {
           setBudgetSummary(budgetResult)
           setTasks(tasksResult.data ?? [])
           setLogs(logsResult.data ?? [])
-          setDashboardSummary(dashboardResult)
           setWeather(weatherResult)
           setPrediction(predictionResult)
+          setAnalytics(analyticsResult)
         } catch {
           if (!cancelled) {
             setProject(null)
             setBudgetSummary(null)
             setTasks([])
             setLogs([])
+            setAnalytics(null)
           }
         } finally {
           if (!cancelled) setLoading(false)
@@ -295,11 +259,6 @@ export default function DashboardPage({ params }: DashboardPageProps) {
 
   const isProjectManager = userRole === 'project_manager'
 
-  const taskSummary = dashboardSummary?.task_summary
-  const activeCount = taskSummary?.in_progress ?? tasks.filter((t) => t.status === 'in_progress').length
-  const completedCount = taskSummary?.completed ?? tasks.filter((t) => t.status === 'completed').length
-  const pendingCount = taskSummary?.pending ?? tasks.filter((t) => t.status === 'pending').length
-
   const totalBudget = project.total_budget
   const totalSpent = project.budget_spent
   const remaining = Math.max(totalBudget - totalSpent, 0)
@@ -315,11 +274,6 @@ export default function DashboardPage({ params }: DashboardPageProps) {
   const pendingApprovals = logs.filter((log) =>
     ['submitted', 'consultant_approved'].includes(log.status),
   ).length
-
-  const taskStatusData = getTaskStatusChartData(tasks)
-  const taskProgressData = getTaskProgressChartData(tasks)
-  const logTrendData = getLogTrendChartData(logs)
-  const resourceSpendData = getResourceSpendData(logs)
 
   // Calculate project completion live from tasks (avoids stale backend value)
   // Formula: Σ(task.progress_percentage / 100 * task.weight)
@@ -519,12 +473,36 @@ export default function DashboardPage({ params }: DashboardPageProps) {
               </DialogDescription>
             </DialogHeader>
 
-            {prediction && (
+            {prediction && (() => {
+              const riskColors: Record<string, { bg: string; label: string; value: string }> = {
+                low: {
+                  bg: 'bg-emerald-50 dark:bg-emerald-950/20',
+                  label: 'text-emerald-700 dark:text-emerald-300',
+                  value: 'text-emerald-900 dark:text-emerald-100',
+                },
+                medium: {
+                  bg: 'bg-amber-50 dark:bg-amber-950/20',
+                  label: 'text-amber-700 dark:text-amber-300',
+                  value: 'text-amber-900 dark:text-amber-100',
+                },
+                high: {
+                  bg: 'bg-orange-50 dark:bg-orange-950/20',
+                  label: 'text-orange-700 dark:text-orange-300',
+                  value: 'text-orange-900 dark:text-orange-100',
+                },
+                critical: {
+                  bg: 'bg-red-50 dark:bg-red-950/20',
+                  label: 'text-red-700 dark:text-red-300',
+                  value: 'text-red-900 dark:text-red-100',
+                },
+              }
+              const rc = riskColors[prediction.risk_level] ?? riskColors.medium
+              return (
               <div className="space-y-4 py-4 pr-1 sm:pr-2">
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-xl border bg-rose-50 p-4 shadow-sm dark:bg-rose-950/20">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300">Risk level</p>
-                    <p className="mt-2 text-2xl font-bold text-rose-900 dark:text-rose-100">
+                  <div className={`rounded-xl border p-4 shadow-sm ${rc.bg}`}>
+                    <p className={`text-xs font-semibold uppercase tracking-wide ${rc.label}`}>Risk level</p>
+                    <p className={`mt-2 text-2xl font-bold ${rc.value}`}>
                       {prediction.risk_level.replace(/_/g, ' ')}
                     </p>
                   </div>
@@ -576,8 +554,39 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                     <p className="text-sm text-muted-foreground">No recommendation text is available yet.</p>
                   )}
                 </div>
+
+                {/* Delay Breakdown */}
+                {analytics?.delay_breakdown && analytics.delay_breakdown.total_delay_days > 0 && (
+                  <div className="space-y-3 rounded-xl border bg-card p-4 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-foreground">Delay breakdown</p>
+                      <span className="text-xs text-muted-foreground">
+                        {analytics.delay_breakdown.total_delay_days} day{analytics.delay_breakdown.total_delay_days === 1 ? '' : 's'} total
+                      </span>
+                    </div>
+                    <ul className="space-y-2">
+                      {analytics.delay_breakdown.breakdown.map((item) => (
+                        <li key={item.cause} className="space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-medium text-foreground">{item.cause}</span>
+                            <span className="text-muted-foreground">
+                              {item.days} day{item.days === 1 ? '' : 's'} · {item.percentage.toFixed(0)}%
+                            </span>
+                          </div>
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full bg-primary"
+                              style={{ width: `${clamp(item.percentage, 0, 100)}%` }}
+                            />
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
-            )}
+              )
+            })()}
           </DialogContent>
         </Dialog>
       </div>
@@ -588,147 +597,395 @@ export default function DashboardPage({ params }: DashboardPageProps) {
             <BarChart3 className="h-5 w-5 text-primary" />
             <div>
               <h3 className="text-lg font-semibold">Project Analytics</h3>
-              <p className="text-sm text-muted-foreground">Visual summaries that help you understand delivery, approvals, and resources faster.</p>
+              <p className="text-sm text-muted-foreground">Operational health across schedule, cost, equipment, weather, labor, and materials.</p>
             </div>
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-2">
+          {!analytics ? (
             <Card className="shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Task Delivery Mix</CardTitle>
-                <CardDescription>Completed, active, and pending workload balance</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {taskStatusData.length > 0 ? (
-                  <ChartContainer config={taskStatusChartConfig} className="h-64 w-full">
-                    <PieChart>
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Pie data={taskStatusData} dataKey="value" nameKey="name" innerRadius={58} outerRadius={86} paddingAngle={3}>
-                        {taskStatusData.map((entry) => (
-                          <Cell key={entry.name} fill={entry.fill} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ChartContainer>
-                ) : (
-                  <p className="py-10 text-center text-sm text-muted-foreground">No task data available yet.</p>
-                )}
-
-                <div className="flex flex-wrap gap-2 rounded-xl border bg-muted/20 p-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                    Completed
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-                    In progress
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-slate-500" />
-                    Pending
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  {taskStatusData.map((item) => (
-                    <div key={item.name} className="rounded-md border bg-muted/30 p-2">
-                      <p className="font-medium text-foreground">{item.name}</p>
-                      <p className="text-muted-foreground">{item.value} tasks</p>
-                    </div>
-                  ))}
-                </div>
+              <CardContent className="py-10 text-center text-sm text-muted-foreground">
+                Analytics unavailable. Submit and approve daily logs to populate these metrics.
               </CardContent>
             </Card>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {/* Schedule Health — radial gauge (100 = on target = full arc) */}
+              {(() => {
+                const m = analytics.schedule_health
+                const tone = statusTone(m.status)
+                const t = toneStyles[tone]
+                const toneFill = tone === 'good' ? '#10b981' : tone === 'warning' ? '#f59e0b' : tone === 'critical' ? '#ef4444' : '#64748b'
+                const planningPhase = m.status === 'unknown' || m.expected_progress <= 0
+                const gaugeValue = clamp(m.index, 0, 100)
+                const overage = Math.max(0, m.index - 100)
+                return (
+                  <Card className={`shadow-sm border ${t.card}`}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <CardTitle className="text-sm font-semibold">Schedule Health</CardTitle>
+                        </div>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${t.badge}`}>
+                          {planningPhase ? 'planning' : m.status}
+                        </span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {planningPhase ? (
+                        <div className="flex h-36 flex-col items-center justify-center gap-1 text-center">
+                          <Calendar className="h-8 w-8 text-muted-foreground/40" />
+                          <p className="text-sm font-medium text-foreground">Planning phase</p>
+                          <p className="text-xs text-muted-foreground">Work hasn't started yet</p>
+                        </div>
+                      ) : (
+                        <>
+                          <ChartContainer config={{ index: { label: 'Index', color: toneFill } }} className="mx-auto h-36 w-full">
+                            <RadialBarChart data={[{ name: 'index', value: gaugeValue, fill: toneFill }]} startAngle={210} endAngle={-30} innerRadius={48} outerRadius={70}>
+                              <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+                              <RadialBar dataKey="value" background={{ fill: '#e5e7eb' }} cornerRadius={6} />
+                              <text
+                                x="50%" y="50%"
+                                textAnchor="middle" dominantBaseline="middle"
+                                className={`fill-current text-2xl font-bold ${t.valueText}`}
+                              >
+                                {m.index.toFixed(0)}%
+                              </text>
+                              {overage > 0 && (
+                                <text
+                                  x="50%" y="68%"
+                                  textAnchor="middle" dominantBaseline="middle"
+                                  className="fill-emerald-600 text-[10px] font-semibold"
+                                >
+                                  +{overage.toFixed(0)} ahead
+                                </text>
+                              )}
+                            </RadialBarChart>
+                          </ChartContainer>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Actual {m.actual_progress.toFixed(1)}%</span>
+                            <span>Expected {m.expected_progress.toFixed(1)}%</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{m.message}</p>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                )
+              })()}
 
-            <Card className="shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Top Task Progress</CardTitle>
-                <CardDescription>Which tasks are moving fastest and which still need attention</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {taskProgressData.length > 0 ? (
-                  <ChartContainer config={taskProgressChartConfig} className="h-64 w-full">
-                    <BarChart data={taskProgressData} layout="vertical" margin={{ left: 10, right: 12 }}>
-                      <CartesianGrid horizontal={false} strokeDasharray="3 3" />
-                      <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                      <YAxis type="category" dataKey="name" width={110} />
-                      <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-                      <Bar dataKey="progress" stackId="progress" fill="#2563eb" radius={[0, 6, 6, 0]} />
-                      <Bar dataKey="remaining" stackId="progress" fill="#e5e7eb" radius={[0, 6, 6, 0]} />
-                    </BarChart>
-                  </ChartContainer>
-                ) : (
-                  <p className="py-10 text-center text-sm text-muted-foreground">No tasks available yet.</p>
-                )}
-              </CardContent>
-            </Card>
+              {/* Budget Efficiency — progress vs budget bars */}
+              {(() => {
+                const m = analytics.budget_efficiency
+                const planningPhase = m.progress_pct === 0 && m.budget_consumed_pct === 0
+                const tone = planningPhase ? 'neutral' : statusTone(m.status)
+                const t = toneStyles[tone]
+                const data = [
+                  { name: 'Progress', value: m.progress_pct, fill: '#10b981' },
+                  { name: 'Budget used', value: m.budget_consumed_pct, fill: '#f59e0b' },
+                ]
+                // Dynamic max so over-100 values stay legible without dwarfing under-100 ones.
+                const dataMax = Math.max(m.progress_pct, m.budget_consumed_pct)
+                const xMax = dataMax <= 100 ? 100 : Math.ceil((dataMax * 1.1) / 10) * 10
+                return (
+                  <Card className={`shadow-sm border ${t.card}`}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Wallet className="h-4 w-4 text-muted-foreground" />
+                          <CardTitle className="text-sm font-semibold">Budget Efficiency</CardTitle>
+                        </div>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${t.badge}`}>
+                          {planningPhase ? 'planning' : m.status}
+                        </span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {planningPhase ? (
+                        <div className="flex h-36 flex-col items-center justify-center gap-1 text-center">
+                          <Wallet className="h-8 w-8 text-muted-foreground/40" />
+                          <p className="text-sm font-medium text-foreground">Planning phase</p>
+                          <p className="text-xs text-muted-foreground">No progress or spending yet</p>
+                        </div>
+                      ) : (
+                        <>
+                          <ChartContainer
+                            config={{ value: { label: 'Percent' } }}
+                            className="h-36 w-full"
+                          >
+                            <BarChart data={data} layout="vertical" margin={{ left: 8, right: 32, top: 4, bottom: 4 }}>
+                              <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+                              <XAxis type="number" domain={[0, xMax]} tickFormatter={(v) => `${v}%`} hide />
+                              <YAxis type="category" dataKey="name" width={86} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+                              <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+                              <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={20}>
+                                {data.map((entry) => <Cell key={entry.name} fill={entry.fill} />)}
+                              </Bar>
+                            </BarChart>
+                          </ChartContainer>
+                          <p className="text-center text-xs text-muted-foreground">
+                            Efficiency score <span className={`font-semibold ${t.valueText}`}>{m.efficiency.toFixed(0)}</span> · {m.message}
+                          </p>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                )
+              })()}
 
-            <Card className="shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Recent Review Flow</CardTitle>
-                <CardDescription>Daily log activity across submission and approval stages</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {logTrendData.length > 0 ? (
-                  <ChartContainer config={logTrendChartConfig} className="h-64 w-full">
-                    <BarChart data={logTrendData} margin={{ left: 10, right: 12 }}>
-                      <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                      <XAxis dataKey="day" tickLine={false} axisLine={false} />
-                      <YAxis allowDecimals={false} />
-                      <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-                      <Bar dataKey="submitted" stackId="logs" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="consultant_approved" stackId="logs" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="pm_approved" stackId="logs" fill="#10b981" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="rejected" stackId="logs" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ChartContainer>
-                ) : (
-                  <p className="py-10 text-center text-sm text-muted-foreground">No review activity yet.</p>
-                )}
+              {/* Equipment Productivity — donut */}
+              {(() => {
+                const m = analytics.equipment_productivity
+                const tone = statusTone(m.status)
+                const t = toneStyles[tone]
+                const data = [
+                  { name: 'Productive', value: Math.max(0, m.productive_hours), fill: '#10b981' },
+                  { name: 'Idle', value: Math.max(0, m.idle_hours), fill: '#ef4444' },
+                ]
+                const hasData = data.some((d) => d.value > 0)
+                return (
+                  <Card className={`shadow-sm border ${t.card}`}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Truck className="h-4 w-4 text-muted-foreground" />
+                          <CardTitle className="text-sm font-semibold">Equipment Productivity</CardTitle>
+                        </div>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${t.badge}`}>
+                          {m.status.replace('_', ' ')}
+                        </span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {hasData ? (
+                        <ChartContainer
+                          config={{ Productive: { label: 'Productive', color: '#10b981' }, Idle: { label: 'Idle', color: '#ef4444' } }}
+                          className="mx-auto h-36 w-full"
+                        >
+                          <PieChart>
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Pie data={data} dataKey="value" nameKey="name" innerRadius={42} outerRadius={62} paddingAngle={2}>
+                              {data.map((entry) => <Cell key={entry.name} fill={entry.fill} />)}
+                            </Pie>
+                            <text
+                              x="50%" y="50%"
+                              textAnchor="middle" dominantBaseline="middle"
+                              className={`fill-current text-xl font-bold ${t.valueText}`}
+                            >
+                              {m.utilization_rate.toFixed(0)}%
+                            </text>
+                          </PieChart>
+                        </ChartContainer>
+                      ) : (
+                        <div className="flex h-36 items-center justify-center text-xs text-muted-foreground">No equipment data</div>
+                      )}
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{m.productive_hours.toFixed(0)}h productive</span>
+                        <span>{m.idle_hours.toFixed(0)}h idle</span>
+                      </div>
+                      {m.idle_cost_estimate > 0 && (
+                        <p className="text-center text-xs text-muted-foreground">Idle cost ≈ {formatBudget(m.idle_cost_estimate)}</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                )
+              })()}
 
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <span className="rounded-full bg-amber-100 px-3 py-1 font-medium text-amber-700">{recentLogs.length} recent logs</span>
-                  <span className="rounded-full bg-emerald-100 px-3 py-1 font-medium text-emerald-700">{completedCount} completed tasks</span>
-                  <span className="rounded-full bg-sky-100 px-3 py-1 font-medium text-sky-700">{pendingApprovals} pending approvals</span>
-                </div>
-              </CardContent>
-            </Card>
+              {/* Weather Impact — donut: lost vs available */}
+              {(() => {
+                const m = analytics.weather_impact
+                const tone = statusTone(m.status)
+                const t = toneStyles[tone]
+                const remaining = Math.max(0, m.total_available_hours - m.hours_lost)
+                const data = [
+                  { name: 'Hours lost', value: Math.max(0, m.hours_lost), fill: '#3b82f6' },
+                  { name: 'Worked', value: remaining, fill: '#e5e7eb' },
+                ]
+                const hasData = data.some((d) => d.value > 0)
+                return (
+                  <Card className={`shadow-sm border ${t.card}`}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CloudRain className="h-4 w-4 text-muted-foreground" />
+                          <CardTitle className="text-sm font-semibold">Weather Impact</CardTitle>
+                        </div>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${t.badge}`}>
+                          {m.status}
+                        </span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {hasData ? (
+                        <ChartContainer
+                          config={{ 'Hours lost': { label: 'Lost', color: '#3b82f6' }, Worked: { label: 'Worked', color: '#e5e7eb' } }}
+                          className="mx-auto h-36 w-full"
+                        >
+                          <PieChart>
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Pie data={data} dataKey="value" nameKey="name" innerRadius={42} outerRadius={62} paddingAngle={2} startAngle={90} endAngle={-270}>
+                              {data.map((entry) => <Cell key={entry.name} fill={entry.fill} />)}
+                            </Pie>
+                            <text
+                              x="50%" y="50%"
+                              textAnchor="middle" dominantBaseline="middle"
+                              className={`fill-current text-xl font-bold ${t.valueText}`}
+                            >
+                              {m.impact_percentage.toFixed(1)}%
+                            </text>
+                          </PieChart>
+                        </ChartContainer>
+                      ) : (
+                        <div className="flex h-36 items-center justify-center text-xs text-muted-foreground">No data</div>
+                      )}
+                      <p className="text-center text-xs text-muted-foreground">
+                        {m.hours_lost.toFixed(0)}h lost over last {m.days_analyzed} days
+                      </p>
+                    </CardContent>
+                  </Card>
+                )
+              })()}
 
-            <Card className="shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Resource Spend</CardTitle>
-                <CardDescription>Where project costs are currently concentrated</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {resourceSpendData.some((item) => item.value > 0) ? (
-                  <ChartContainer config={resourceSpendChartConfig} className="h-64 w-full">
-                    <BarChart data={resourceSpendData} margin={{ left: 10, right: 12 }}>
-                      <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                      <XAxis dataKey="name" tickLine={false} axisLine={false} />
-                      <YAxis tickFormatter={(value) => formatBudget(Number(value))} />
-                      <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-                      <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                        {resourceSpendData.map((entry) => (
-                          <Cell key={entry.name} fill={entry.fill} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ChartContainer>
-                ) : (
-                  <p className="py-10 text-center text-sm text-muted-foreground">No resource spending available yet.</p>
-                )}
+              {/* Labor Productivity — line chart of recent logs */}
+              {(() => {
+                const m = analytics.labor_productivity
+                const tone: AnalyticsTone =
+                  m.trend === 'improving' ? 'good' :
+                    m.trend === 'declining' ? 'critical' :
+                      'neutral'
+                const t = toneStyles[tone]
+                const TrendIcon = m.trend === 'declining' ? TrendingDown : TrendingUp
+                // Backend returns most-recent first; reverse for left-to-right time axis.
+                const data = [...m.data_points].reverse().map((p, i) => ({
+                  idx: i + 1,
+                  label: p.date ? new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : `#${i + 1}`,
+                  output: p.output_per_hour,
+                }))
+                const trendColor = tone === 'critical' ? '#ef4444' : tone === 'good' ? '#10b981' : '#64748b'
+                return (
+                  <Card className={`shadow-sm border ${t.card}`}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <HardHat className="h-4 w-4 text-muted-foreground" />
+                          <CardTitle className="text-sm font-semibold">Labor Productivity</CardTitle>
+                        </div>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${t.badge}`}>
+                          {m.trend.replace('_', ' ')}
+                        </span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {data.length > 0 ? (
+                        <ChartContainer
+                          config={{ output: { label: 'Output/hr', color: trendColor } }}
+                          className="h-36 w-full"
+                        >
+                          <LineChart data={data} margin={{ left: 8, right: 12, top: 8, bottom: 4 }}>
+                            <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                            <XAxis dataKey="label" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={28} />
+                            <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+                            <Line type="monotone" dataKey="output" stroke={trendColor} strokeWidth={2} dot={{ r: 3 }} />
+                          </LineChart>
+                        </ChartContainer>
+                      ) : (
+                        <div className="flex h-36 items-center justify-center text-xs text-muted-foreground">No labor data</div>
+                      )}
+                      <p className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                        Current <span className={`font-semibold ${t.valueText}`}>{m.current_output_per_hour.toFixed(1)}</span> output/hr
+                        <TrendIcon className="h-3.5 w-3.5" />
+                      </p>
+                    </CardContent>
+                  </Card>
+                )
+              })()}
 
-                <div className="grid gap-2 text-xs sm:grid-cols-3">
-                  {resourceSpendData.map((item) => (
-                    <div key={item.name} className="rounded-md border bg-muted/30 p-2">
-                      <p className="font-medium text-foreground">{item.name}</p>
-                      <p className="text-muted-foreground">{formatBudget(item.value)}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+              {/* Material Burn Rate — stacked bar: consumed vs remaining + runway comparison */}
+              {(() => {
+                const m = analytics.material_burn_rate
+                const tone = statusTone(m.status)
+                const t = toneStyles[tone]
+                const allocated = Math.max(m.total_allocated, 1)
+                const consumedPct = Math.min(100, (m.total_consumed / allocated) * 100)
+                const data = [
+                  {
+                    name: 'Budget',
+                    consumed: m.total_consumed,
+                    remaining: Math.max(0, m.total_allocated - m.total_consumed),
+                  },
+                ]
+                return (
+                  <Card className={`shadow-sm border ${t.card}`}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4 text-muted-foreground" />
+                          <CardTitle className="text-sm font-semibold">Material Burn Rate</CardTitle>
+                        </div>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${t.badge}`}>
+                          {m.status.replace('_', ' ')}
+                        </span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <ChartContainer
+                        config={{ consumed: { label: 'Consumed', color: '#f59e0b' }, remaining: { label: 'Remaining', color: '#e5e7eb' } }}
+                        className="h-12 w-full"
+                      >
+                        <BarChart data={data} layout="vertical" margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
+                          <XAxis type="number" hide />
+                          <YAxis type="category" dataKey="name" hide />
+                          <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+                          <Bar dataKey="consumed" stackId="b" fill="#f59e0b" radius={[6, 0, 0, 6]} />
+                          <Bar dataKey="remaining" stackId="b" fill="#e5e7eb" radius={[0, 6, 6, 0]} />
+                        </BarChart>
+                      </ChartContainer>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{formatBudget(m.total_consumed)} used ({consumedPct.toFixed(0)}%)</span>
+                        <span>{formatBudget(m.total_allocated)} budget</span>
+                      </div>
+
+                      <div className="mt-1 space-y-1">
+                        <p className="text-xs font-medium text-foreground">
+                          {formatBudget(m.burn_rate_per_day)}<span className="font-normal text-muted-foreground">/day</span>
+                        </p>
+                        {m.days_until_exhaustion !== null && m.days_remaining_in_project > 0 && (() => {
+                          const max = Math.max(m.days_until_exhaustion, m.days_remaining_in_project, 1)
+                          const exhaustPct = (m.days_until_exhaustion / max) * 100
+                          const projectPct = (m.days_remaining_in_project / max) * 100
+                          const tight = m.days_until_exhaustion < m.days_remaining_in_project
+                          return (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                <span className="inline-block h-2 w-2 rounded-full bg-amber-500" />
+                                Budget runs out: {m.days_until_exhaustion}d
+                              </div>
+                              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                                <div className="h-full rounded-full bg-amber-500" style={{ width: `${exhaustPct}%` }} />
+                              </div>
+                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+                                Project ends: {m.days_remaining_in_project}d
+                              </div>
+                              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${projectPct}%` }} />
+                              </div>
+                              {tight && (
+                                <p className="text-[10px] font-medium text-red-600">
+                                  Runs out {m.days_remaining_in_project - m.days_until_exhaustion}d before project ends
+                                </p>
+                              )}
+                            </div>
+                          )
+                        })()}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })()}
+            </div>
+          )}
         </div>
       )}
 

@@ -117,22 +117,21 @@ export function DashboardSidebar({ projectId, projectName, userRole }: SidebarPr
       )}
     >
       {/* Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border/60">
+      <div
+        className={cn(
+          "h-16 flex items-center border-b border-sidebar-border/60",
+          collapsed ? "justify-center px-2" : "justify-between px-4",
+        )}
+      >
         {!collapsed && (
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2 min-w-0">
             <SiteLogo imageClassName="h-10 w-10" textClassName="text-lg" />
           </Link>
-        )}
-        {collapsed && (
-          <SiteLogo showText={false} imageClassName="h-10 w-10 mx-auto" />
         )}
         <Button
           variant="ghost"
           size="icon"
-          className={cn(
-            "text-sidebar-foreground hover:bg-sidebar-accent h-8 w-8",
-            collapsed && "mx-auto"
-          )}
+          className="text-sidebar-foreground hover:bg-sidebar-accent h-8 w-8 shrink-0"
           onClick={() => setCollapsed(!collapsed)}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >

@@ -15,10 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Building2, ArrowLeft, Loader2, Plus } from 'lucide-react'
+import { ArrowLeft, Loader2, Plus } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { createProject, listClients } from '@/lib/api'
 import type { ClientListItem } from '@/lib/api-types'
+import { SiteLogo } from '@/components/site-logo'
 
 function dateInputToApiDateTime(date: string): string | undefined {
   if (!date) return undefined
@@ -162,18 +163,17 @@ export default function NewProjectPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-primary text-primary-foreground">
-        <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4">
+      <header className="border-b border-border bg-card">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <Link href="/dashboard">
-              <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10">
+              <Button variant="ghost" size="icon" aria-label="Back to dashboard">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <div className="flex items-center gap-2">
-              <Building2 className="h-6 w-6" />
-              <span className="font-bold text-lg">c-plan</span>
-            </div>
+            <Link href="/" className="flex items-center gap-2">
+              <SiteLogo imageClassName="h-12 w-12" textClassName="text-xl text-foreground" />
+            </Link>
           </div>
         </div>
       </header>

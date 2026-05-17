@@ -12,6 +12,7 @@ import type { AuthUser } from './domain'
 import { clearTokens, setTokens, getAccessToken } from './auth-storage'
 import {
   fetchCurrentUser,
+  googleSignInRequest,
   loginRequest,
   logoutRequest,
   registerRequest,
@@ -28,6 +29,7 @@ interface AuthContextType {
     phone_number?: string
     password: string
   }) => Promise<{ success: boolean; error?: string }>
+  loginWithGoogle: (idToken: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
 }
@@ -142,6 +144,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const loginWithGoogle = useCallback(async (idToken: string) => {
+    setIsLoading(true)
+    try {
+      const tokens = await googleSignInRequest(idToken)
+      setTokens(tokens.access_token, tokens.refresh_token)
+      const me = await fetchCurrentUser()
+      setUser(mapUser(me))
+      return { success: true as const }
+    } catch (e) {
+      clearTokens()
+      setUser(null)
+      return {
+        success: false as const,
+        error: e instanceof Error ? e.message : 'Google sign-in failed',
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
   const logout = useCallback(async () => {
     await logoutRequest()
     clearTokens()
@@ -156,6 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         login,
         signup,
+        loginWithGoogle,
         logout,
         refreshUser,
       }}

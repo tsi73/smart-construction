@@ -158,6 +158,15 @@ export async function registerRequest(body: {
   })
 }
 
+export async function googleSignInRequest(idToken: string): Promise<LoginResponse> {
+  return apiRequest<LoginResponse>('/auth/google', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_token: idToken }),
+    auth: false,
+  })
+}
+
 export async function logoutRequest(): Promise<void> {
   // Backend has no /auth/logout endpoint — just clear tokens client-side
   clearTokens()

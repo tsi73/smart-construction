@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from app.models.log import DailyLog, Manpower, Material, Equipment, DailyLogActivity
 from app.models.task import Task, TaskActivity
 from app.models.project import Project
-from app.models.commons import LogStatus, ProjectRole
+from app.models.commons import LogStatus, ProjectRole, ProjectStatus
 from app.repositories.log import DailyLogRepository
 
 log_repo = DailyLogRepository()
@@ -174,6 +174,14 @@ class DailyLogService:
                 project.progress_percentage = round(
                     sum((t.progress_percentage or 0) / 100.0 * (t.weight or 0) for t in all_tasks), 2
                 )
+
+                # Auto-transition status. on_hold is a manual flag; never override it.
+                if project.status != ProjectStatus.ON_HOLD.value:
+                    if project.progress_percentage >= 100:
+                        project.status = ProjectStatus.COMPLETED.value
+                    elif project.progress_percentage > 0 and project.status == ProjectStatus.PLANNING.value:
+                        project.status = ProjectStatus.IN_PROGRESS.value
+
                 db.add(project)
 
         await db.commit()

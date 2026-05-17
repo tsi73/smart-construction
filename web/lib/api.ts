@@ -33,6 +33,7 @@ import type {
   AdminStatsResponse,
   AuditLogItem,
   AnnouncementItem,
+  ComprehensiveAnalytics,
 } from './api-types'
 import type { AuthUser, ProjectRole, ProjectStatus } from './domain'
 
@@ -640,6 +641,10 @@ export async function getPrediction(projectId: string) {
   return apiRequest<PredictionResponse>(`/projects/${projectId}/prediction`)
 }
 
+export async function getComprehensiveAnalytics(projectId: string) {
+  return apiRequest<ComprehensiveAnalytics>(`/projects/${projectId}/analytics/comprehensive`)
+}
+
 /* ── Weather ── */
 
 export async function getWeather(projectId: string) {
@@ -682,6 +687,27 @@ export async function recordBudgetPayment(projectId: string, body: { payment_amo
   return apiRequest<BudgetPaymentItem>(`/projects/${projectId}/budget-payments`, {
     method: 'POST',
     body: JSON.stringify(body),
+  })
+}
+
+export async function getBudgetPayment(projectId: string, paymentId: string) {
+  return apiRequest<BudgetPaymentItem>(`/projects/${projectId}/budget-payments/${paymentId}`)
+}
+
+export async function updateBudgetPayment(
+  projectId: string,
+  paymentId: string,
+  body: { payment_amount?: number; payment_date?: string; reference?: string | null; notes?: string | null },
+) {
+  return apiRequest<BudgetPaymentItem>(`/projects/${projectId}/budget-payments/${paymentId}`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
+}
+
+export async function deleteBudgetPayment(projectId: string, paymentId: string) {
+  return apiRequest<void>(`/projects/${projectId}/budget-payments/${paymentId}`, {
+    method: 'DELETE',
   })
 }
 

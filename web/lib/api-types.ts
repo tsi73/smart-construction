@@ -510,3 +510,108 @@ export interface AnnouncementItem {
   created_at: string
   expires_at?: string | null
 }
+
+/* ── Analytics ── */
+
+export interface ScheduleHealth {
+  index: number
+  expected_progress: number
+  actual_progress: number
+  status: 'healthy' | 'warning' | 'critical' | 'unknown'
+  message: string
+}
+
+export interface BudgetEfficiency {
+  efficiency: number
+  progress_pct: number
+  budget_consumed_pct: number
+  status: 'excellent' | 'efficient' | 'inefficient'
+  message: string
+}
+
+export interface EquipmentProductivity {
+  productive_hours: number
+  paid_hours: number
+  idle_hours: number
+  utilization_rate: number
+  idle_cost_estimate: number
+  status: 'healthy' | 'warning' | 'critical' | 'no_data'
+}
+
+export interface WeatherImpact {
+  hours_lost: number
+  total_available_hours: number
+  impact_percentage: number
+  days_analyzed: number
+  status: 'minimal' | 'moderate' | 'significant'
+}
+
+export interface LaborProductivity {
+  current_output_per_hour: number
+  trend: 'improving' | 'stable' | 'declining' | 'insufficient_data'
+  data_points: Array<{
+    date: string | null
+    output_per_hour: number
+    worker_count: number
+    hours_worked: number
+  }>
+}
+
+export interface MaterialBurnRate {
+  total_consumed: number
+  total_allocated: number
+  burn_rate_per_day: number
+  days_until_exhaustion: number | null
+  days_remaining_in_project: number
+  status: 'healthy' | 'warning' | 'critical' | 'unknown' | 'no_data'
+  message: string
+}
+
+export interface RiskBoundary {
+  current_score: number
+  next_level_threshold: number
+  distance: number
+  next_level: string
+  critical_parameter: string
+  critical_parameter_change_needed: number
+  message: string
+}
+
+export interface DelayBreakdownItem {
+  cause: string
+  days: number
+  percentage: number
+}
+
+export interface DelayBreakdown {
+  total_delay_days: number
+  breakdown: DelayBreakdownItem[]
+}
+
+export interface ComprehensiveAnalytics {
+  project_id: string
+  prediction: {
+    risk_level: string
+    confidence_score: number
+    delay_estimate_days: number
+    budget_overrun_estimate: number
+    source: string
+    reason: string
+    recommendation: string
+    risk_probabilities: Record<string, number>
+  }
+  schedule_health: ScheduleHealth
+  budget_efficiency: BudgetEfficiency
+  equipment_productivity: EquipmentProductivity
+  weather_impact: WeatherImpact
+  labor_productivity: LaborProductivity
+  material_burn_rate: MaterialBurnRate
+  risk_boundary: RiskBoundary
+  delay_breakdown: DelayBreakdown
+  risk_trend: Array<{
+    date: string | null
+    risk_level: string
+    risk_score: number
+    confidence: number
+  }>
+}

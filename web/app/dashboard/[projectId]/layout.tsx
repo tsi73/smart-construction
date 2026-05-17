@@ -103,22 +103,24 @@ export default function DashboardLayout({ children, params }: DashboardLayoutPro
 
   return (
     <ProjectRoleProvider role={userRole}>
-      <div className="min-h-screen flex bg-background">
-        <DashboardSidebar
-          projectId={projectId}
-          projectName={projectRow.name}
-          userRole={userRole}
-        />
-
-        <div className="flex-1 flex flex-col min-w-0">
-          <DashboardHeader
+      <div className="min-h-screen flex flex-col bg-background">
+        <AnnouncementBanner />
+        <div className="flex-1 flex min-h-0">
+          <DashboardSidebar
             projectId={projectId}
             projectName={projectRow.name}
             userRole={userRole}
           />
-          <AnnouncementBanner />
-          <main className="flex-1 overflow-auto p-6">{children}</main>
-          <FooterBar />
+
+          <div className="flex-1 flex flex-col min-w-0">
+            <DashboardHeader
+              projectId={projectId}
+              projectName={projectRow.name}
+              userRole={userRole}
+            />
+            <main className="flex-1 overflow-auto p-6">{children}</main>
+            <FooterBar />
+          </div>
         </div>
       </div>
     </ProjectRoleProvider>

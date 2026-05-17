@@ -24,9 +24,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
-import { getProjectBudget, listBudgetPayments, recordBudgetPayment } from '@/lib/api'
+import { deleteBudgetPayment, getProjectBudget, listBudgetPayments, recordBudgetPayment, updateBudgetPayment } from '@/lib/api'
 import type { BudgetSummary, BudgetPaymentItem } from '@/lib/api-types'
-import { ArrowDownCircle, ArrowUpCircle, DollarSign, Loader2, Plus, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
+import { ArrowDownCircle, ArrowUpCircle, DollarSign, Eye, Loader2, Pencil, Plus, Trash2, TrendingUp, Wallet } from 'lucide-react'
 import { useCurrency } from '@/lib/currency-context'
 import { CurrencyPicker } from '@/components/currency-picker'
 import { toast } from 'sonner'
@@ -48,6 +48,15 @@ export default function BudgetPage({ params }: BudgetPageProps) {
   const [reference, setReference] = useState('')
   const [notes, setNotes] = useState('')
   const [adding, setAdding] = useState(false)
+
+  const [viewPayment, setViewPayment] = useState<BudgetPaymentItem | null>(null)
+  const [editPayment, setEditPayment] = useState<BudgetPaymentItem | null>(null)
+  const [editAmount, setEditAmount] = useState('')
+  const [editDate, setEditDate] = useState('')
+  const [editReference, setEditReference] = useState('')
+  const [editNotes, setEditNotes] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const loadData = async () => {
     setLoading(true)
@@ -96,6 +105,57 @@ export default function BudgetPage({ params }: BudgetPageProps) {
       toast.error(e instanceof Error ? e.message : 'Failed to record payment')
     } finally {
       setAdding(false)
+    }
+  }
+
+  const openEdit = (payment: BudgetPaymentItem) => {
+    setEditPayment(payment)
+    setEditAmount(String(payment.payment_amount))
+    setEditDate(payment.payment_date)
+    setEditReference(payment.reference || '')
+    setEditNotes(payment.notes || '')
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editPayment) return
+    if (!editAmount || Number(editAmount) <= 0) {
+      toast.error('Enter a valid payment amount')
+      return
+    }
+    if (!editDate) {
+      toast.error('Payment date is required')
+      return
+    }
+    setSaving(true)
+    try {
+      await updateBudgetPayment(projectId, editPayment.id, {
+        payment_amount: Number(editAmount),
+        payment_date: editDate,
+        reference: editReference.trim() || null,
+        notes: editNotes.trim() || null,
+      })
+      setEditPayment(null)
+      await loadData()
+      toast.success('Payment updated')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to update payment')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (payment: BudgetPaymentItem) => {
+    const label = payment.reference?.trim() || new Date(payment.payment_date).toLocaleDateString()
+    if (!confirm(`Delete payment "${label}"? This cannot be undone.`)) return
+    setDeletingId(payment.id)
+    try {
+      await deleteBudgetPayment(projectId, payment.id)
+      await loadData()
+      toast.success('Payment deleted')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to delete payment')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -257,12 +317,13 @@ export default function BudgetPage({ params }: BudgetPageProps) {
                 <TableHead>Reference</TableHead>
                 <TableHead>Notes</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right w-[140px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {payments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
                     <DollarSign className="mx-auto mb-2 h-8 w-8 opacity-30" />
                     No payments recorded yet. Click &quot;Record Payment&quot; to track client payments.
                   </TableCell>
@@ -276,6 +337,39 @@ export default function BudgetPage({ params }: BudgetPageProps) {
                     <TableCell className="font-medium">{payment.reference || '—'}</TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{payment.notes || '—'}</TableCell>
                     <TableCell className="text-right font-medium text-emerald-600">{formatBudget(payment.payment_amount)}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="View"
+                          onClick={() => setViewPayment(payment)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Edit"
+                          onClick={() => openEdit(payment)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Delete"
+                          disabled={deletingId === payment.id}
+                          onClick={() => void handleDelete(payment)}
+                        >
+                          {deletingId === payment.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          )}
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -283,6 +377,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
                 <TableRow className="bg-muted/30 font-medium">
                   <TableCell colSpan={3}>Total Received</TableCell>
                   <TableCell className="text-right text-emerald-600">{formatBudget(payments.reduce((s, p) => s + p.payment_amount, 0))}</TableCell>
+                  <TableCell />
                 </TableRow>
               )}
             </TableBody>
@@ -341,6 +436,107 @@ export default function BudgetPage({ params }: BudgetPageProps) {
             <Button onClick={() => void handleRecordPayment()} disabled={adding || !amount || !paymentDate}>
               {adding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Record Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Payment Dialog */}
+      <Dialog open={!!viewPayment} onOpenChange={(open) => !open && setViewPayment(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Payment Details</DialogTitle>
+            <DialogDescription>Recorded client payment</DialogDescription>
+          </DialogHeader>
+          {viewPayment && (
+            <dl className="grid grid-cols-3 gap-x-3 gap-y-3 py-2 text-sm">
+              <dt className="col-span-1 text-muted-foreground">Amount</dt>
+              <dd className="col-span-2 font-medium text-emerald-600">{formatBudget(viewPayment.payment_amount)}</dd>
+
+              <dt className="col-span-1 text-muted-foreground">Date</dt>
+              <dd className="col-span-2 font-medium">
+                {new Date(viewPayment.payment_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </dd>
+
+              <dt className="col-span-1 text-muted-foreground">Reference</dt>
+              <dd className="col-span-2">{viewPayment.reference || <span className="text-muted-foreground">—</span>}</dd>
+
+              <dt className="col-span-1 text-muted-foreground">Notes</dt>
+              <dd className="col-span-2 whitespace-pre-wrap">{viewPayment.notes || <span className="text-muted-foreground">—</span>}</dd>
+
+              <dt className="col-span-1 text-muted-foreground">Recorded</dt>
+              <dd className="col-span-2 text-muted-foreground">
+                {new Date(viewPayment.created_at).toLocaleString()}
+              </dd>
+            </dl>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewPayment(null)}>Close</Button>
+            {viewPayment && (
+              <Button
+                onClick={() => {
+                  const p = viewPayment
+                  setViewPayment(null)
+                  openEdit(p)
+                }}
+              >
+                <Pencil className="mr-2 h-4 w-4" /> Edit
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Payment Dialog */}
+      <Dialog open={!!editPayment} onOpenChange={(open) => !open && setEditPayment(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Payment</DialogTitle>
+            <DialogDescription>Update the details of this recorded payment.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Payment Amount *</Label>
+              <Input
+                type="number"
+                min={0}
+                step={0.01}
+                value={editAmount}
+                onChange={(e) => setEditAmount(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Payment Date *</Label>
+              <Input
+                type="date"
+                max={new Date().toISOString().split('T')[0]}
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Reference Number</Label>
+              <Input
+                placeholder="e.g. Bank ref, Payment certificate #"
+                value={editReference}
+                onChange={(e) => setEditReference(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Notes</Label>
+              <Textarea
+                placeholder="Additional details about this payment"
+                value={editNotes}
+                onChange={(e) => setEditNotes(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditPayment(null)}>Cancel</Button>
+            <Button onClick={() => void handleSaveEdit()} disabled={saving || !editAmount || !editDate}>
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
