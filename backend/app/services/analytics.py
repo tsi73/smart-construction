@@ -112,7 +112,8 @@ async def compute_schedule_health_index(db: AsyncSession, project: Project) -> S
     if expected_progress > 0:
         index = (actual_progress / expected_progress) * 100
     else:
-        index = 100.0 if actual_progress == 0 else 0.0
+        # No progress expected yet — any actual progress means ahead of schedule
+        index = 100.0
 
     if index >= 80:
         status = "healthy"
@@ -121,12 +122,19 @@ async def compute_schedule_health_index(db: AsyncSession, project: Project) -> S
     else:
         status = "critical"
 
+    if expected_progress == 0 and actual_progress > 0:
+        message = f"Ahead of schedule — {actual_progress:.1f}% done before expected start"
+    elif index >= 100:
+        message = f"On track or ahead — {actual_progress:.1f}% actual vs {expected_progress:.1f}% expected"
+    else:
+        message = f"Delivering at {index:.0f}% of required pace"
+
     return {
         "index": round(index, 1),
         "expected_progress": round(expected_progress, 1),
         "actual_progress": round(actual_progress, 1),
         "status": status,
-        "message": f"Delivering at {index:.0f}% of required pace",
+        "message": message,
     }
 
 
