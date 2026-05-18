@@ -1,7 +1,7 @@
 import os
-from typing import List
+from typing import Annotated, List
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 from pydantic import field_validator
 
 # Sentinel for the well-known dev secret. If we see it in production, refuse to boot.
@@ -23,8 +23,9 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # CORS — accepts either a JSON list or a comma-separated string from env.
-    # In dev we default to wide-open; in production point it at your Vercel URLs.
-    BACKEND_CORS_ORIGINS: List[str] = ["*"]
+    # `NoDecode` tells pydantic-settings to hand us the raw string instead of
+    # trying to JSON-parse it first; the validator below handles both formats.
+    BACKEND_CORS_ORIGINS: Annotated[List[str], NoDecode] = ["*"]
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
@@ -32,8 +33,9 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             v = v.strip()
             if v.startswith("["):
-                # Pydantic will parse JSON lists itself.
-                return v
+                # JSON list — let json.loads handle it so quotes/escapes work.
+                import json
+                return json.loads(v)
             # Comma-separated → list of trimmed origins.
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
