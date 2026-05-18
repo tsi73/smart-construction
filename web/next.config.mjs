@@ -6,10 +6,15 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Turbopack (Next 16 default) honors the `browser` field in fflate's
-  // package.json automatically, so the Node-only worker path we hit under
-  // Webpack doesn't get bundled. No alias needed — Turbopack handles it.
-  turbopack: {},
+  // fflate's package.json `exports` map routes `require + node` resolution to
+  // ./lib/node.cjs, which contains `new Worker(c + workerAdd, { eval: true })`
+  // — unresolvable by Turbopack. fflate exposes a `./browser` subpath that
+  // points at the safe ESM entry; alias the bare import to that.
+  turbopack: {
+    resolveAlias: {
+      fflate: 'fflate/browser',
+    },
+  },
 }
 
 export default nextConfig
