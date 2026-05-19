@@ -129,7 +129,6 @@ function SignupForm() {
               </div>
               <LanguagePicker />
             </div>
-            </div>
             <CardTitle className="text-2xl">{t('auth.signupTitle')}</CardTitle>
             <CardDescription>
               {t('auth.signupSubtitle')}
