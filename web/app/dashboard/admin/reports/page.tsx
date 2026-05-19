@@ -13,11 +13,13 @@ import { useCurrency } from '@/lib/currency-context'
 import { Loader2, Users, Building2, ListTodo, ClipboardList } from 'lucide-react'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { CartesianGrid, Line, LineChart, XAxis, YAxis, Legend } from 'recharts'
+import { useLanguage } from '@/lib/language-context'
 
 export default function AdminReportsPage() {
     const router = useRouter()
     const { user, isAuthenticated, isLoading: authLoading } = useAuth()
     const { formatBudget } = useCurrency()
+    const { t } = useLanguage()
     const [summary, setSummary] = useState<PlatformSummary | null>(null)
     const [series, setSeries] = useState<ActivitySeriesPoint[]>([])
     const [days, setDays] = useState<number>(30)
@@ -44,7 +46,7 @@ export default function AdminReportsPage() {
                 setSummary(s)
                 setSeries(a.series)
             } catch (e) {
-                if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load reports')
+                if (!cancelled) setError(e instanceof Error ? e.message : t('reportsPage.failedToLoad'))
             } finally {
                 if (!cancelled) setLoading(false)
             }
@@ -65,16 +67,16 @@ export default function AdminReportsPage() {
         <div className="p-8 space-y-6">
             <div className="flex items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">System Reports</h1>
-                    <p className="text-muted-foreground mt-1">Cross-project metrics and activity over time</p>
+                    <h1 className="text-3xl font-bold tracking-tight">{t('reportsPage.title')}</h1>
+                    <p className="text-muted-foreground mt-1">{t('reportsPage.subtitle')}</p>
                 </div>
                 <Select value={String(days)} onValueChange={(v) => setDays(Number(v))}>
                     <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="7">Last 7 days</SelectItem>
-                        <SelectItem value="30">Last 30 days</SelectItem>
-                        <SelectItem value="90">Last 90 days</SelectItem>
-                        <SelectItem value="180">Last 180 days</SelectItem>
+                        <SelectItem value="7">{t('reportsPage.last7Days')}</SelectItem>
+                        <SelectItem value="30">{t('reportsPage.last30Days')}</SelectItem>
+                        <SelectItem value="90">{t('reportsPage.last90Days')}</SelectItem>
+                        <SelectItem value="180">{t('reportsPage.last180Days')}</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -89,28 +91,28 @@ export default function AdminReportsPage() {
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <SummaryCard
                         icon={<Users className="h-4 w-4 text-muted-foreground" />}
-                        label="Users"
+                        label={t('reportsPage.usersLabel')}
                         primary={`${summary.users.total}`}
-                        sub={`${summary.users.active} active · ${summary.users.admins} admin`}
+                        sub={t('reportsPage.usersSub').replace('{active}', String(summary.users.active)).replace('{admins}', String(summary.users.admins))}
                     />
                     <SummaryCard
                         icon={<Building2 className="h-4 w-4 text-muted-foreground" />}
-                        label="Projects"
+                        label={t('reportsPage.projectsLabel')}
                         primary={`${summary.projects.total}`}
                         sub={Object.entries(summary.projects.by_status)
-                            .map(([k, v]) => `${v} ${k.replace(/_/g, ' ')}`).join(' · ')}
+                            .map(([k, v]) => `${v} ${t('reportsPage.projectStatus.' + k) || k.replace(/_/g, ' ')}`).join(' · ')}
                     />
                     <SummaryCard
                         icon={<ListTodo className="h-4 w-4 text-muted-foreground" />}
-                        label="Tasks"
+                        label={t('reportsPage.tasksLabel')}
                         primary={`${summary.tasks.total}`}
-                        sub={`${summary.tasks.completed} completed`}
+                        sub={t('reportsPage.tasksSub').replace('{completed}', String(summary.tasks.completed))}
                     />
                     <SummaryCard
                         icon={<ClipboardList className="h-4 w-4 text-muted-foreground" />}
-                        label="Daily Logs"
+                        label={t('reportsPage.dailyLogsLabel')}
                         primary={`${summary.daily_logs.total}`}
-                        sub={`${summary.daily_logs.pm_approved} PM-approved`}
+                        sub={t('reportsPage.dailyLogsSub').replace('{approved}', String(summary.daily_logs.pm_approved))}
                     />
                 </div>
             )}
@@ -118,21 +120,21 @@ export default function AdminReportsPage() {
             {summary && (
                 <Card>
                     <CardHeader>
-                        <CardTitle>Budget across all projects</CardTitle>
-                        <CardDescription>Total contract value, spend, and remaining headroom</CardDescription>
+                        <CardTitle>{t('reportsPage.budgetTitle')}</CardTitle>
+                        <CardDescription>{t('reportsPage.budgetDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid gap-3 sm:grid-cols-3">
                             <div className="rounded-lg border bg-muted/30 p-4">
-                                <p className="text-xs uppercase text-muted-foreground">Total Budget</p>
+                                <p className="text-xs uppercase text-muted-foreground">{t('reportsPage.totalBudget')}</p>
                                 <p className="mt-1 text-2xl font-bold">{formatBudget(summary.projects.total_budget)}</p>
                             </div>
                             <div className="rounded-lg border bg-muted/30 p-4">
-                                <p className="text-xs uppercase text-muted-foreground">Spent</p>
+                                <p className="text-xs uppercase text-muted-foreground">{t('reportsPage.spent')}</p>
                                 <p className="mt-1 text-2xl font-bold text-amber-700">{formatBudget(summary.projects.total_spent)}</p>
                             </div>
                             <div className="rounded-lg border bg-muted/30 p-4">
-                                <p className="text-xs uppercase text-muted-foreground">Remaining</p>
+                                <p className="text-xs uppercase text-muted-foreground">{t('reportsPage.remaining')}</p>
                                 <p className="mt-1 text-2xl font-bold text-emerald-700">{formatBudget(summary.projects.remaining)}</p>
                             </div>
                         </div>
@@ -142,16 +144,16 @@ export default function AdminReportsPage() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Activity over time</CardTitle>
-                    <CardDescription>Signups, logins, log approvals, and audit events per day</CardDescription>
+                    <CardTitle>{t('reportsPage.activityTitle')}</CardTitle>
+                    <CardDescription>{t('reportsPage.activityDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <ChartContainer
                         config={{
-                            signups: { label: 'Signups', color: '#10b981' },
-                            logins: { label: 'Active Users', color: '#3b82f6' },
-                            log_approvals: { label: 'Log Approvals', color: '#a855f7' },
-                            audit_events: { label: 'Audit Events', color: '#f59e0b' },
+                            signups: { label: t('reportsPage.signups'), color: '#10b981' },
+                            logins: { label: t('reportsPage.activeUsers'), color: '#3b82f6' },
+                            log_approvals: { label: t('reportsPage.logApprovals'), color: '#a855f7' },
+                            audit_events: { label: t('reportsPage.auditEvents'), color: '#f59e0b' },
                         }}
                         className="h-72 w-full"
                     >

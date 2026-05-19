@@ -26,6 +26,7 @@ import { useAuth } from '@/lib/auth-context'
 import { SiteLogo } from '@/components/site-logo'
 import { roleLabels, type ProjectRole } from '@/lib/domain'
 import { useState } from 'react'
+import { useLanguage } from '@/lib/language-context'
 
 interface SidebarProps {
   projectId: string
@@ -34,58 +35,58 @@ interface SidebarProps {
 }
 
 // Navigation items based on role
-const getNavItems = (projectId: string, role: ProjectRole) => {
+const getNavItems = (projectId: string, role: ProjectRole, t: (k: string) => string) => {
   const baseItems = [
     {
-      label: 'Dashboard',
+      label: t('sidebar.dashboard'),
       href: `/dashboard/${projectId}`,
       icon: LayoutDashboard,
       roles: ['project_manager', 'consultant', 'site_engineer'] as ProjectRole[],
     },
     {
-      label: 'Tasks',
+      label: t('sidebar.tasks'),
       href: `/dashboard/${projectId}/tasks`,
       icon: ListTodo,
       roles: ['project_manager', 'site_engineer'] as ProjectRole[],
     },
     {
-      label: 'Daily Logs',
+      label: t('sidebar.dailyLogs'),
       href: `/dashboard/${projectId}/logs`,
       icon: ClipboardList,
       roles: ['project_manager', 'consultant', 'site_engineer'] as ProjectRole[],
     },
     {
-      label: 'Budget',
+      label: t('sidebar.budget'),
       href: `/dashboard/${projectId}/budget`,
       icon: DollarSign,
       roles: ['project_manager'] as ProjectRole[],
     },
     {
-      label: 'Team',
+      label: t('sidebar.team'),
       href: `/dashboard/${projectId}/team`,
       icon: Users,
       roles: ['project_manager', 'consultant', 'site_engineer'] as ProjectRole[],
     },
     {
-      label: 'Stakeholders',
+      label: t('sidebar.stakeholders'),
       href: `/dashboard/${projectId}/stakeholders`,
       icon: Briefcase,
       roles: ['project_manager'] as ProjectRole[],
     },
     {
-      label: 'Reports',
+      label: t('sidebar.reports'),
       href: `/dashboard/${projectId}/reports`,
       icon: FileText,
       roles: ['project_manager', 'consultant'] as ProjectRole[],
     },
     {
-      label: 'Notifications',
+      label: t('sidebar.notifications'),
       href: `/dashboard/${projectId}/notifications`,
       icon: Bell,
       roles: ['project_manager', 'consultant', 'site_engineer'] as ProjectRole[],
     },
     {
-      label: 'Settings',
+      label: t('sidebar.settings'),
       href: `/dashboard/${projectId}/settings`,
       icon: Settings,
       roles: ['project_manager'] as ProjectRole[],
@@ -98,9 +99,10 @@ const getNavItems = (projectId: string, role: ProjectRole) => {
 export function DashboardSidebar({ projectId, projectName, userRole }: SidebarProps) {
   const pathname = usePathname()
   const { user, logout } = useAuth()
+  const { t } = useLanguage()
   const [collapsed, setCollapsed] = useState(false)
 
-  const navItems = getNavItems(projectId, userRole)
+  const navItems = getNavItems(projectId, userRole, t)
 
   const initials = user?.full_name
     .split(' ')
@@ -143,7 +145,7 @@ export function DashboardSidebar({ projectId, projectName, userRole }: SidebarPr
       {!collapsed && (
         <div className="p-4 border-b border-sidebar-border/60">
           <p className="text-xs text-sidebar-foreground/60 uppercase tracking-wider mb-1">
-            Current Project
+            {t('sidebar.currentProject')}
           </p>
           <h2 className="font-semibold text-sm truncate">{projectName}</h2>
           <Badge

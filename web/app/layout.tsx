@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
-import { EB_Garamond } from 'next/font/google'
+import { EB_Garamond, Noto_Sans_Ethiopic } from 'next/font/google'
 import { AuthProvider } from '@/lib/auth-context'
 import { CurrencyProvider } from '@/lib/currency-context'
+import { LanguageProvider } from '@/lib/language-context'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
 const ebGaramond = EB_Garamond({ subsets: ['latin'], variable: '--font-sans' })
+const _notoEthiopic = Noto_Sans_Ethiopic({ subsets: ["ethiopic"], weight: ["400", "500", "600", "700"], variable: "--font-ethiopic" });
 
 export const metadata: Metadata = {
   title: 'Foresite - onstruction Project Management',
@@ -38,13 +40,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${ebGaramond.variable} font-sans antialiased`}>
+      <body className={`${ebGaramond.variable} ${_notoEthiopic.variable} font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <AuthProvider>
-            <CurrencyProvider>
-              {children}
-            </CurrencyProvider>
-          </AuthProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <CurrencyProvider>
+                {children}
+              </CurrencyProvider>
+            </AuthProvider>
+          </LanguageProvider>
         </ThemeProvider>
         <Toaster richColors position="top-right" />
       </body>

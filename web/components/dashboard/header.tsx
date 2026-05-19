@@ -28,6 +28,8 @@ import { useRouter } from 'next/navigation'
 import { type ProjectRole, roleLabels } from '@/lib/domain'
 import { ProjectSelectionModal } from '@/components/project-selection-modal'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { LanguagePicker } from '@/components/language-picker'
+import { useLanguage } from '@/lib/language-context'
 
 interface DashboardHeaderProps {
   projectId: string
@@ -40,6 +42,7 @@ export function DashboardHeader({ projectId, projectName, userRole }: DashboardH
   const router = useRouter()
   const [projectPickerOpen, setProjectPickerOpen] = useState(false)
   const unreadCount = useUnreadCount()
+  const { t } = useLanguage()
   
   const initials = user?.full_name
     .split(' ')
@@ -68,7 +71,7 @@ export function DashboardHeader({ projectId, projectName, userRole }: DashboardH
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search tasks, logs, team members..."
+            placeholder={t('dashboard.searchPlaceholder')}
             className="rounded-full pl-10 bg-background shadow-sm"
           />
         </div>
@@ -76,6 +79,9 @@ export function DashboardHeader({ projectId, projectName, userRole }: DashboardH
 
       {/* Right - Actions */}
       <div className="flex items-center gap-2">
+        {/* Language Picker */}
+        <LanguagePicker />
+
         {/* Theme Toggle */}
         <ThemeToggle />
 
@@ -116,20 +122,20 @@ export function DashboardHeader({ projectId, projectName, userRole }: DashboardH
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => router.push(`/dashboard/${projectId}/profile`)}>
               <User className="mr-2 h-4 w-4" />
-              Profile
+              {t('dashboard.profile')}
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => router.push(`/dashboard/${projectId}/settings`)}>
               <Settings className="mr-2 h-4 w-4" />
-              Settings
+              {t('dashboard.settings')}
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => setProjectPickerOpen(true)}>
               <Building2 className="mr-2 h-4 w-4" />
-              Projects
+              {t('dashboard.projects')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
-              Logout
+              {t('dashboard.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

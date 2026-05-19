@@ -6,6 +6,8 @@ import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { SiteLogo } from '@/components/site-logo'
+import { LanguagePicker } from '@/components/language-picker'
+import { useLanguage } from '@/lib/language-context'
 
 interface HeaderProps {
   onOpenDashboard: () => void
@@ -14,6 +16,7 @@ interface HeaderProps {
 export function Header({ onOpenDashboard }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { isAuthenticated, user, logout } = useAuth()
+  const { t } = useLanguage()
 
   return (
     <header className="bg-primary text-primary-foreground sticky top-0 z-50">
@@ -25,29 +28,30 @@ export function Header({ onOpenDashboard }: HeaderProps) {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             <Link href="#features" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-              Features
+              {t('nav.features')}
             </Link>
             <Link href="#about" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-              About
+              {t('nav.about')}
             </Link>
             <Link href="#contact" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-              Contact
+              {t('nav.contact')}
             </Link>
           </div>
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-4">
+            <LanguagePicker />
             {isAuthenticated ? (
               <>
                 <span className="text-sm text-primary-foreground/80 max-w-[180px] truncate inline-block">
-                  Welcome, {user?.full_name}
+                  {t('nav.welcome')}, {user?.full_name}
                 </span>
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={onOpenDashboard}
                 >
-                  Open Dashboard
+                  {t('nav.openDashboard')}
                 </Button>
                 <Button
                   variant="ghost"
@@ -55,7 +59,7 @@ export function Header({ onOpenDashboard }: HeaderProps) {
                   className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
                   onClick={logout}
                 >
-                  Logout
+                  {t('nav.logout')}
                 </Button>
               </>
             ) : (
@@ -66,12 +70,12 @@ export function Header({ onOpenDashboard }: HeaderProps) {
                     size="sm"
                     className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
                   >
-                    Login
+                    {t('nav.login')}
                   </Button>
                 </Link>
                 <Link href="/signup">
                   <Button variant="secondary" size="sm">
-                    Sign Up
+                    {t('nav.signup')}
                   </Button>
                 </Link>
               </>
@@ -91,27 +95,30 @@ export function Header({ onOpenDashboard }: HeaderProps) {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-primary-foreground/20">
+            <div className="px-2 mb-4 flex justify-end">
+              <LanguagePicker />
+            </div>
             <div className="flex flex-col gap-4">
               <Link
                 href="#features"
                 className="text-sm text-primary-foreground/80 hover:text-primary-foreground"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Features
+                {t('nav.features')}
               </Link>
               <Link
                 href="#about"
                 className="text-sm text-primary-foreground/80 hover:text-primary-foreground"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                About
+                {t('nav.about')}
               </Link>
               <Link
                 href="#contact"
                 className="text-sm text-primary-foreground/80 hover:text-primary-foreground"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Contact
+                {t('nav.contact')}
               </Link>
               <div className="flex gap-2 pt-4 border-t border-primary-foreground/20">
                 {isAuthenticated ? (
@@ -125,7 +132,7 @@ export function Header({ onOpenDashboard }: HeaderProps) {
                         setMobileMenuOpen(false)
                       }}
                     >
-                      Open Dashboard
+                      {t('nav.openDashboard')}
                     </Button>
                     <Button
                       variant="ghost"
@@ -136,7 +143,7 @@ export function Header({ onOpenDashboard }: HeaderProps) {
                         setMobileMenuOpen(false)
                       }}
                     >
-                      Logout
+                      {t('nav.logout')}
                     </Button>
                   </>
                 ) : (
@@ -147,12 +154,12 @@ export function Header({ onOpenDashboard }: HeaderProps) {
                         size="sm"
                         className="w-full text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
                       >
-                        Login
+                        {t('nav.login')}
                       </Button>
                     </Link>
                     <Link href="/signup" className="flex-1">
                       <Button variant="secondary" size="sm" className="w-full">
-                        Sign Up
+                        {t('nav.signup')}
                       </Button>
                     </Link>
                   </>

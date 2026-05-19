@@ -11,6 +11,8 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth-context'
 import { GoogleSignInButton } from '@/components/google-sign-in-button'
+import { useLanguage } from '@/lib/language-context'
+import { LanguagePicker } from '@/components/language-picker'
 
 export default function SignupPage() {
   return (
@@ -24,6 +26,7 @@ function SignupForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { signup, isLoading } = useAuth()
+  const { t } = useLanguage()
   const [showPassword, setShowPassword] = useState(false)
   const invitedEmail = searchParams.get('email') || ''
   const [formData, setFormData] = useState({
@@ -79,36 +82,40 @@ function SignupForm() {
     <div className="min-h-screen bg-primary flex">
       {/* Left Panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12">
-        <div className="flex items-center gap-3 text-primary-foreground">
-          <Image src="/logo-construction pro-1.png" alt="Foresite" width={48} height={48} className="h-30 w-30 object-contain" />
-          <span className="font-bold text-2xl">Foresite</span>
+        <div className="flex items-center justify-between text-primary-foreground w-full">
+          <div className="flex items-center gap-3">
+            <Image src="/logo-construction pro-1.png" alt="Foresite" width={48} height={48} className="h-30 w-30 object-contain" />
+            <span className="font-bold text-2xl">Foresite</span>
+          </div>
+          <LanguagePicker />
+        </div>
         </div>
 
         <div className="space-y-6">
           <h1 className="text-4xl font-bold text-primary-foreground text-balance">
-            Join thousands of construction professionals
+            {t('auth.leftTitleSignup')}
           </h1>
           <p className="text-lg text-primary-foreground/80 max-w-md">
-            Create your account and start managing your construction projects more efficiently today.
+            {t('auth.leftSubtitleSignup')}
           </p>
           <ul className="space-y-3 text-primary-foreground/80">
             <li className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-accent" />
-              Real-time project tracking
+              {t('auth.bullet1')}
             </li>
             <li className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-accent" />
-              AI-powered risk prediction
+              {t('auth.bullet2')}
             </li>
             <li className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-accent" />
-              Streamlined approval workflows
+              {t('auth.bullet3')}
             </li>
           </ul>
         </div>
 
         <p className="text-sm text-primary-foreground/60">
-          &copy; {new Date().getFullYear()} Foresite. All rights reserved.
+          &copy; {new Date().getFullYear()} {t('footer.allRightsReserved')}
         </p>
       </div>
 
@@ -116,13 +123,17 @@ function SignupForm() {
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <Card className="w-full max-w-md border-0 shadow-lg">
           <CardHeader className="space-y-1 text-center">
-            <div className="flex items-center justify-center gap-2 mb-4 lg:hidden">
-              <Image src="/logo-construction pro-1.png" alt="Foresite" width={40} height={40} className="h-10 w-10 object-contain" />
-              <span className="font-bold text-xl text-foreground">Foresite</span>
+            <div className="flex items-center justify-between mb-4 lg:hidden w-full">
+              <div className="flex items-center gap-2">
+                <Image src="/logo-construction pro-1.png" alt="Foresite" width={40} height={40} className="h-10 w-10 object-contain" />
+                <span className="font-bold text-xl text-foreground">Foresite</span>
+              </div>
+              <LanguagePicker />
             </div>
-            <CardTitle className="text-2xl">Create an account</CardTitle>
+            </div>
+            <CardTitle className="text-2xl">{t('auth.signupTitle')}</CardTitle>
             <CardDescription>
-              Enter your information to get started
+              {t('auth.signupSubtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -134,12 +145,12 @@ function SignupForm() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="full_name">Full Name *</Label>
+                <Label htmlFor="full_name">{t('auth.fullNameLabel')}</Label>
                 <Input
                   id="full_name"
                   name="full_name"
                   type="text"
-                  placeholder="John Doe"
+                  placeholder={t('auth.fullNamePlaceholder')}
                   value={formData.full_name}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -147,12 +158,12 @@ function SignupForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email">{t('auth.emailLabel')} *</Label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="name@company.com"
+                  placeholder={t('auth.emailPlaceholder')}
                   value={formData.email}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -160,12 +171,12 @@ function SignupForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">{t('auth.phoneLabel')}</Label>
                 <Input
                   id="phone_number"
                   name="phone_number"
                   type="tel"
-                  placeholder="+251 91 123 4567"
+                  placeholder={t('auth.phonePlaceholder')}
                   value={formData.phone_number}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -173,13 +184,13 @@ function SignupForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password *</Label>
+                <Label htmlFor="password">{t('auth.passwordLabel')} *</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Create a password"
+                    placeholder={t('auth.createPasswordPlaceholder')}
                     value={formData.password}
                     onChange={handleChange}
                     disabled={isLoading}
@@ -196,12 +207,12 @@ function SignupForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirm_password">Confirm Password *</Label>
+                <Label htmlFor="confirm_password">{t('auth.confirmPasswordLabel')}</Label>
                 <Input
                   id="confirm_password"
                   name="confirm_password"
                   type="password"
-                  placeholder="Confirm your password"
+                  placeholder={t('auth.confirmPasswordPlaceholder')}
                   value={formData.confirm_password}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -212,10 +223,10 @@ function SignupForm() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
+                    {t('auth.signingUp')}
                   </>
                 ) : (
-                  'Create account'
+                  t('auth.signupBtn')
                 )}
               </Button>
 
@@ -225,7 +236,7 @@ function SignupForm() {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-background px-2 text-muted-foreground">
-                    Or sign up with
+                    {t('auth.orSignupWith')}
                   </span>
                 </div>
               </div>
@@ -233,9 +244,9 @@ function SignupForm() {
               <GoogleSignInButton onError={setError} />
 
               <p className="text-center text-sm text-muted-foreground">
-                Already have an account?{' '}
+                {t('auth.alreadyHaveAccount')}{' '}
                 <Link href="/login" className="text-accent hover:underline font-medium">
-                  Sign in
+                  {t('auth.signinLink')}
                 </Link>
               </p>
             </form>
