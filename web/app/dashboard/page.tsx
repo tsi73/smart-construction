@@ -617,10 +617,6 @@ export default function DashboardProjectListPage() {
                       {t('workspace.noProjectsDesc')}
                     </p>
                   </div>
-                  <Button onClick={() => router.push('/dashboard/new-project')} className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    {t('workspace.createNewProject')}
-                  </Button>
                 </CardContent>
               </Card>
             )}
