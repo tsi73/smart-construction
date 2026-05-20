@@ -323,6 +323,24 @@ async def update_structured_settings(
     # Return updated settings
     return await get_structured_settings(db, current_user)
 
+# ══════════════════════ Landing Page Stats (no auth) ══════════════════════
+landing_router = APIRouter()
+
+@landing_router.get("/stats", summary="Public stats for landing page")
+async def landing_stats(db: DbSession) -> Any:
+    """Aggregate counts shown on the public landing page — no auth required."""
+    active_statuses = ("planning", "in_progress")
+    active_projects = (await db.execute(
+        select(func.count(Project.id)).where(Project.status.in_(active_statuses))
+    )).scalar() or 0
+
+    total_members = (await db.execute(
+        select(func.count(User.id)).where(User.is_active == True)  # noqa: E712
+    )).scalar() or 0
+
+    return {"active_projects": int(active_projects), "team_members": int(total_members)}
+
+
 # ══════════════════════ Admin Stats ══════════════════════
 admin_router = APIRouter()
 

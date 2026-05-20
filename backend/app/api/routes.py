@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from app.api.endpoints import auth, users, clients, suppliers, projects, budget, tasks, prediction, weather, reports, oauth
 from app.api.endpoints.daily_logs import project_logs_router, logs_router
-from app.api.endpoints.system import messages_router, audit_router, settings_router, admin_router, announcements_router
+from app.api.endpoints.system import messages_router, audit_router, settings_router, admin_router, announcements_router, landing_router
 
 api_router = APIRouter()
 
@@ -29,3 +29,4 @@ api_router.include_router(audit_router,           prefix="/audit-logs",   tags=[
 api_router.include_router(settings_router,        prefix="/settings",     tags=["System Settings"])
 api_router.include_router(admin_router,           prefix="/admin",        tags=["Admin"])
 api_router.include_router(announcements_router,   prefix="/announcements", tags=["Announcements"])
+api_router.include_router(landing_router,          prefix="/landing",        tags=["Landing Page"])
