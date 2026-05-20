@@ -21,20 +21,22 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/lib/auth-context'
 import { SiteLogo } from '@/components/site-logo'
-
-const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, exact: true },
-  { label: 'Users', href: '/dashboard/admin/users', icon: Users },
-  { label: 'Audit Logs', href: '/dashboard/admin/audit-logs', icon: FileSearch },
-  { label: 'Settings', href: '/dashboard/admin/settings', icon: Settings },
-  { label: 'Announcements', href: '/dashboard/admin/announcements', icon: Megaphone },
-  { label: 'Reports', href: '/dashboard/admin/reports', icon: BarChart3 },
-]
+import { useLanguage } from '@/lib/language-context'
 
 export function AdminSidebar() {
   const pathname = usePathname()
   const { user, logout } = useAuth()
+  const { t } = useLanguage()
   const [collapsed, setCollapsed] = useState(false)
+
+  const NAV_ITEMS = [
+    { label: t('sidebar.dashboard'), href: '/dashboard', icon: LayoutDashboard, exact: true },
+    { label: t('sidebar.users'), href: '/dashboard/admin/users', icon: Users },
+    { label: t('sidebar.auditLogs'), href: '/dashboard/admin/audit-logs', icon: FileSearch },
+    { label: t('sidebar.settings'), href: '/dashboard/admin/settings', icon: Settings },
+    { label: t('sidebar.announcements'), href: '/dashboard/admin/announcements', icon: Megaphone },
+    { label: t('sidebar.reports'), href: '/dashboard/admin/reports', icon: BarChart3 },
+  ]
 
   const initials = user?.full_name
     .split(' ')
@@ -75,9 +77,9 @@ export function AdminSidebar() {
       {!collapsed && (
         <div className="p-4 border-b border-sidebar-border/60">
           <p className="text-xs text-sidebar-foreground/60 uppercase tracking-wider mb-1">
-            Admin Console
+            {t('admin.console')}
           </p>
-          <h2 className="font-semibold text-sm truncate">System Management</h2>
+          <h2 className="font-semibold text-sm truncate">{t('admin.title')}</h2>
         </div>
       )}
 

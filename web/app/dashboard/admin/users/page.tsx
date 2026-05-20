@@ -34,11 +34,13 @@ import { listUsers, promoteUser, demoteUser, activateUser, deactivateUser } from
 import type { UserListItem } from '@/lib/api-types'
 import { Loader2, MoreVertical, Search, Shield, ShieldOff, UserCheck, UserX, ArrowLeft, ChevronLeft, ChevronRight, ArrowDown, ArrowUp } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useLanguage } from '@/lib/language-context'
 
 export default function AdminUsersPage() {
     const router = useRouter()
     const { user, isAuthenticated, isLoading: authLoading } = useAuth()
     const { toast } = useToast()
+    const { t } = useLanguage()
     const [users, setUsers] = useState<UserListItem[]>([])
     const [total, setTotal] = useState(0)
     const [page, setPage] = useState(1)
@@ -79,7 +81,7 @@ export default function AdminUsersPage() {
             setUsers(res.data)
             setTotal(res.total)
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load users')
+            setError(err instanceof Error ? err.message : t('userManagementPage.failedToLoad'))
         } finally {
             setLoading(false)
         }
@@ -109,14 +111,29 @@ export default function AdminUsersPage() {
     }
 
     const formatRelative = (iso?: string | null) => {
-        if (!iso) return 'Never'
+        if (!iso) return t('userManagementPage.dates.never')
         const diff = Date.now() - new Date(iso).getTime()
         const days = Math.floor(diff / 86_400_000)
-        if (days < 1) return 'Today'
-        if (days === 1) return 'Yesterday'
-        if (days < 30) return `${days}d ago`
-        if (days < 365) return `${Math.floor(days / 30)}mo ago`
-        return `${Math.floor(days / 365)}y ago`
+        
+        const isAmharic = t('userManagementPage.dates.today') === 'ዛሬ'
+        
+        if (days < 1) return t('userManagementPage.dates.today')
+        if (days === 1) return t('userManagementPage.dates.yesterday')
+        if (days < 30) {
+            return isAmharic 
+                ? `ከ ${days} ${t('userManagementPage.dates.days')} ${t('userManagementPage.dates.ago')}`
+                : `${days}${t('userManagementPage.dates.days')} ${t('userManagementPage.dates.ago')}`
+        }
+        if (days < 365) {
+            const mos = Math.floor(days / 30)
+            return isAmharic 
+                ? `ከ ${mos} ${t('userManagementPage.dates.months')} ${t('userManagementPage.dates.ago')}`
+                : `${mos}${t('userManagementPage.dates.months')} ${t('userManagementPage.dates.ago')}`
+        }
+        const yrs = Math.floor(days / 365)
+        return isAmharic 
+            ? `ከ ${yrs} ${t('userManagementPage.dates.years')} ${t('userManagementPage.dates.ago')}`
+            : `${yrs}${t('userManagementPage.dates.years')} ${t('userManagementPage.dates.ago')}`
     }
 
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -125,14 +142,14 @@ export default function AdminUsersPage() {
         try {
             await promoteUser(userId)
             toast({
-                title: 'Success',
-                description: 'User promoted to admin',
+                title: t('userManagementPage.success'),
+                description: t('userManagementPage.promotedSuccess'),
             })
             loadUsers()
         } catch (err) {
             toast({
-                title: 'Error',
-                description: err instanceof Error ? err.message : 'Failed to promote user',
+                title: t('userManagementPage.error'),
+                description: err instanceof Error ? err.message : t('userManagementPage.failedToPromote'),
                 variant: 'destructive',
             })
         }
@@ -142,14 +159,14 @@ export default function AdminUsersPage() {
         try {
             await demoteUser(userId)
             toast({
-                title: 'Success',
-                description: 'User demoted to regular user',
+                title: t('userManagementPage.success'),
+                description: t('userManagementPage.demotedSuccess'),
             })
             loadUsers()
         } catch (err) {
             toast({
-                title: 'Error',
-                description: err instanceof Error ? err.message : 'Failed to demote user',
+                title: t('userManagementPage.error'),
+                description: err instanceof Error ? err.message : t('userManagementPage.failedToDemote'),
                 variant: 'destructive',
             })
         }
@@ -159,14 +176,14 @@ export default function AdminUsersPage() {
         try {
             await activateUser(userId)
             toast({
-                title: 'Success',
-                description: 'User activated',
+                title: t('userManagementPage.success'),
+                description: t('userManagementPage.activatedSuccess'),
             })
             loadUsers()
         } catch (err) {
             toast({
-                title: 'Error',
-                description: err instanceof Error ? err.message : 'Failed to activate user',
+                title: t('userManagementPage.error'),
+                description: err instanceof Error ? err.message : t('userManagementPage.failedToActivate'),
                 variant: 'destructive',
             })
         }
@@ -176,14 +193,14 @@ export default function AdminUsersPage() {
         try {
             await deactivateUser(userId)
             toast({
-                title: 'Success',
-                description: 'User deactivated',
+                title: t('userManagementPage.success'),
+                description: t('userManagementPage.deactivatedSuccess'),
             })
             loadUsers()
         } catch (err) {
             toast({
-                title: 'Error',
-                description: err instanceof Error ? err.message : 'Failed to deactivate user',
+                title: t('userManagementPage.error'),
+                description: err instanceof Error ? err.message : t('userManagementPage.failedToDeactivate'),
                 variant: 'destructive',
             })
         }
@@ -202,14 +219,14 @@ export default function AdminUsersPage() {
     return (
         <div className="p-8 space-y-8">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-                <p className="text-muted-foreground mt-2">Manage system users, roles, and permissions</p>
+                <h1 className="text-3xl font-bold tracking-tight">{t('userManagementPage.title')}</h1>
+                <p className="text-muted-foreground mt-2">{t('userManagementPage.subtitle')}</p>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>All Users</CardTitle>
-                    <CardDescription>View and manage all users in the system</CardDescription>
+                    <CardTitle>{t('userManagementPage.allUsers')}</CardTitle>
+                    <CardDescription>{t('userManagementPage.allUsersDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {/* Filters */}
@@ -217,7 +234,7 @@ export default function AdminUsersPage() {
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search by name or email..."
+                                placeholder={t('userManagementPage.searchPlaceholder')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-9"
@@ -225,22 +242,22 @@ export default function AdminUsersPage() {
                         </div>
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
                             <SelectTrigger className="w-full sm:w-[180px]">
-                                <SelectValue placeholder="Status" />
+                                <SelectValue placeholder={t('userManagementPage.status')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Status</SelectItem>
-                                <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="inactive">Inactive</SelectItem>
+                                <SelectItem value="all">{t('userManagementPage.allStatus')}</SelectItem>
+                                <SelectItem value="active">{t('userManagementPage.active')}</SelectItem>
+                                <SelectItem value="inactive">{t('userManagementPage.inactive')}</SelectItem>
                             </SelectContent>
                         </Select>
                         <Select value={roleFilter} onValueChange={setRoleFilter}>
                             <SelectTrigger className="w-full sm:w-[180px]">
-                                <SelectValue placeholder="Role" />
+                                <SelectValue placeholder={t('userManagementPage.role')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Roles</SelectItem>
-                                <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="user">User</SelectItem>
+                                <SelectItem value="all">{t('userManagementPage.allRoles')}</SelectItem>
+                                <SelectItem value="admin">{t('userManagementPage.admin')}</SelectItem>
+                                <SelectItem value="user">{t('userManagementPage.user')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -257,25 +274,25 @@ export default function AdminUsersPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('full_name')}>
-                                        Name {sortIcon('full_name')}
+                                        {t('userManagementPage.tableName')} {sortIcon('full_name')}
                                     </TableHead>
                                     <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('email')}>
-                                        Email {sortIcon('email')}
+                                        {t('userManagementPage.tableEmail')} {sortIcon('email')}
                                     </TableHead>
-                                    <TableHead>Phone</TableHead>
+                                    <TableHead>{t('userManagementPage.tablePhone')}</TableHead>
                                     <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('is_admin')}>
-                                        Role {sortIcon('is_admin')}
+                                        {t('userManagementPage.tableRole')} {sortIcon('is_admin')}
                                     </TableHead>
                                     <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('is_active')}>
-                                        Status {sortIcon('is_active')}
+                                        {t('userManagementPage.tableStatus')} {sortIcon('is_active')}
                                     </TableHead>
                                     <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('created_at')}>
-                                        Joined {sortIcon('created_at')}
+                                        {t('userManagementPage.tableJoined')} {sortIcon('created_at')}
                                     </TableHead>
                                     <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('last_login_at')}>
-                                        Last Login {sortIcon('last_login_at')}
+                                        {t('userManagementPage.tableLastLogin')} {sortIcon('last_login_at')}
                                     </TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
+                                    <TableHead className="text-right">{t('userManagementPage.tableActions')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -288,7 +305,7 @@ export default function AdminUsersPage() {
                                 ) : users.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                                            No users found
+                                            {t('userManagementPage.noUsersFound')}
                                         </TableCell>
                                     </TableRow>
                                 ) : (
@@ -299,19 +316,19 @@ export default function AdminUsersPage() {
                                             <TableCell>{u.phone_number || '—'}</TableCell>
                                             <TableCell>
                                                 {u.is_admin ? (
-                                                    <Badge variant="default">Admin</Badge>
+                                                    <Badge variant="default">{t('userManagementPage.admin')}</Badge>
                                                 ) : (
-                                                    <Badge variant="secondary">User</Badge>
+                                                    <Badge variant="secondary">{t('userManagementPage.user')}</Badge>
                                                 )}
                                             </TableCell>
                                             <TableCell>
                                                 {u.is_active ? (
                                                     <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                                        Active
+                                                        {t('userManagementPage.active')}
                                                     </Badge>
                                                 ) : (
                                                     <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                                                        Inactive
+                                                        {t('userManagementPage.inactive')}
                                                     </Badge>
                                                 )}
                                             </TableCell>
@@ -335,17 +352,17 @@ export default function AdminUsersPage() {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                        <DropdownMenuLabel>{t('userManagementPage.tableActions')}</DropdownMenuLabel>
                                                         <DropdownMenuSeparator />
                                                         {u.is_admin ? (
                                                             <DropdownMenuItem onClick={() => handleDemote(u.id)}>
                                                                 <ShieldOff className="mr-2 h-4 w-4" />
-                                                                Demote to User
+                                                                {t('userManagementPage.demoteToUser')}
                                                             </DropdownMenuItem>
                                                         ) : (
                                                             <DropdownMenuItem onClick={() => handlePromote(u.id)}>
                                                                 <Shield className="mr-2 h-4 w-4" />
-                                                                Promote to Admin
+                                                                {t('userManagementPage.promoteToAdmin')}
                                                             </DropdownMenuItem>
                                                         )}
                                                         <DropdownMenuSeparator />
@@ -355,12 +372,12 @@ export default function AdminUsersPage() {
                                                                 className="text-destructive"
                                                             >
                                                                 <UserX className="mr-2 h-4 w-4" />
-                                                                Deactivate
+                                                                {t('userManagementPage.deactivate')}
                                                             </DropdownMenuItem>
                                                         ) : (
                                                             <DropdownMenuItem onClick={() => handleActivate(u.id)}>
                                                                 <UserCheck className="mr-2 h-4 w-4" />
-                                                                Activate
+                                                                {t('userManagementPage.activate')}
                                                             </DropdownMenuItem>
                                                         )}
                                                     </DropdownMenuContent>
@@ -376,14 +393,14 @@ export default function AdminUsersPage() {
                     {total > 0 && (
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">
-                                Page {page} of {totalPages} · {total.toLocaleString()} user{total === 1 ? '' : 's'}
+                                {t('userManagementPage.page')} {page} {t('userManagementPage.of')} {totalPages} · {total.toLocaleString()} {total === 1 ? t('userManagementPage.userSingle') : t('userManagementPage.users')}
                             </span>
                             <div className="flex items-center gap-2">
                                 <Button variant="outline" size="sm" disabled={page <= 1 || loading} onClick={() => setPage(p => Math.max(1, p - 1))}>
-                                    <ChevronLeft className="h-4 w-4" /> Prev
+                                    <ChevronLeft className="h-4 w-4" /> {t('userManagementPage.prev')}
                                 </Button>
                                 <Button variant="outline" size="sm" disabled={page >= totalPages || loading} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>
-                                    Next <ChevronRight className="h-4 w-4" />
+                                    {t('userManagementPage.next')} <ChevronRight className="h-4 w-4" />
                                 </Button>
                             </div>
                         </div>

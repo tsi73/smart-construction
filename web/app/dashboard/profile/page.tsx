@@ -12,10 +12,12 @@ import { ArrowLeft, Loader2, User, Building2, CheckCircle2, Clock, Mail, Phone }
 import { updateMe, fetchMyProjects } from '@/lib/api'
 import type { ProjectListItem } from '@/lib/api-types'
 import { toast } from 'sonner'
+import { useLanguage } from '@/lib/language-context'
 
 export default function ProfilePage() {
     const router = useRouter()
     const { user, refreshUser } = useAuth()
+    const { t } = useLanguage()
     const [saving, setSaving] = useState(false)
     const [loading, setLoading] = useState(true)
     const [fullName, setFullName] = useState(user?.full_name || '')
@@ -51,11 +53,11 @@ export default function ProfilePage() {
 
     const handleSave = async () => {
         if (!fullName.trim()) {
-            toast.error('Full name is required')
+            toast.error(t('profilePage.fullNameRequired'))
             return
         }
         if (!email.trim()) {
-            toast.error('Email is required')
+            toast.error(t('profilePage.emailRequired'))
             return
         }
 
@@ -67,9 +69,9 @@ export default function ProfilePage() {
                 phone_number: phone.trim() || undefined,
             })
             await refreshUser()
-            toast.success('Profile updated successfully')
+            toast.success(t('profilePage.updatedSuccess'))
         } catch (e) {
-            toast.error(e instanceof Error ? e.message : 'Failed to update profile')
+            toast.error(e instanceof Error ? e.message : t('profilePage.failedToUpdate'))
         } finally {
             setSaving(false)
         }
@@ -91,7 +93,7 @@ export default function ProfilePage() {
                     <Button variant="ghost" size="icon" onClick={() => router.back()}>
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
-                    <h1 className="text-xl font-semibold">Profile Settings</h1>
+                    <h1 className="text-xl font-semibold">{t('profilePage.title')}</h1>
                 </div>
             </header>
 
@@ -101,8 +103,8 @@ export default function ProfilePage() {
                     {/* Profile Card */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Personal Information</CardTitle>
-                            <CardDescription>Update your personal details and contact information</CardDescription>
+                            <CardTitle>{t('profilePage.personalInfo')}</CardTitle>
+                            <CardDescription>{t('profilePage.personalInfoDesc')}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             {/* Avatar */}
@@ -111,42 +113,42 @@ export default function ProfilePage() {
                                     <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <p className="text-sm font-medium">Profile Picture</p>
-                                    <p className="text-xs text-muted-foreground">Avatar is generated from your initials</p>
+                                    <p className="text-sm font-medium">{t('profilePage.profilePicture')}</p>
+                                    <p className="text-xs text-muted-foreground">{t('profilePage.avatarNotice')}</p>
                                 </div>
                             </div>
 
                             {/* Form Fields */}
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="fullName">Full Name *</Label>
+                                    <Label htmlFor="fullName">{t('profilePage.fullName')}</Label>
                                     <Input
                                         id="fullName"
                                         value={fullName}
                                         onChange={(e) => setFullName(e.target.value)}
-                                        placeholder="Enter your full name"
+                                        placeholder={t('profilePage.fullNamePlaceholder')}
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="email">Email *</Label>
+                                    <Label htmlFor="email">{t('profilePage.email')}</Label>
                                     <Input
                                         id="email"
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="your.email@example.com"
+                                        placeholder={t('profilePage.emailPlaceholder')}
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="phone">Phone Number</Label>
+                                    <Label htmlFor="phone">{t('profilePage.phoneNumber')}</Label>
                                     <Input
                                         id="phone"
                                         type="tel"
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
-                                        placeholder="+251 912 345 678"
+                                        placeholder={t('profilePage.phonePlaceholder')}
                                     />
                                 </div>
                             </div>
@@ -154,11 +156,11 @@ export default function ProfilePage() {
                             {/* Save Button */}
                             <div className="flex justify-end gap-2">
                                 <Button variant="outline" onClick={() => router.back()}>
-                                    Cancel
+                                    {t('profilePage.cancel')}
                                 </Button>
                                 <Button onClick={handleSave} disabled={saving}>
                                     {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Save Changes
+                                    {saving ? t('profilePage.saving') : t('profilePage.saveChanges')}
                                 </Button>
                             </div>
                         </CardContent>
@@ -167,27 +169,27 @@ export default function ProfilePage() {
                     {/* Account Info Card */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Account Information</CardTitle>
-                            <CardDescription>View your account details</CardDescription>
+                            <CardTitle>{t('profilePage.accountInfo')}</CardTitle>
+                            <CardDescription>{t('profilePage.accountInfoDesc')}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
-                                    <p className="text-muted-foreground">Account Type</p>
-                                    <p className="font-medium">{user.is_admin ? 'Administrator' : 'User'}</p>
+                                    <p className="text-muted-foreground">{t('profilePage.accountType')}</p>
+                                    <p className="font-medium">{user.is_admin ? t('profilePage.admin') : t('profilePage.user')}</p>
                                 </div>
                                 <div>
-                                    <p className="text-muted-foreground">Account Status</p>
-                                    <p className="font-medium text-emerald-600">Active</p>
+                                    <p className="text-muted-foreground">{t('profilePage.accountStatus')}</p>
+                                    <p className="font-medium text-emerald-600">{t('profilePage.active')}</p>
                                 </div>
                                 <div>
-                                    <p className="text-muted-foreground">Member Since</p>
+                                    <p className="text-muted-foreground">{t('profilePage.memberSince')}</p>
                                     <p className="font-medium">
                                         {user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '—'}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-muted-foreground">Last Updated</p>
+                                    <p className="text-muted-foreground">{t('profilePage.lastUpdated')}</p>
                                     <p className="font-medium">
                                         {user.updated_at ? new Date(user.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                                     </p>
@@ -199,8 +201,8 @@ export default function ProfilePage() {
                     {/* Project Statistics Card */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Project Statistics</CardTitle>
-                            <CardDescription>Your project involvement and contributions</CardDescription>
+                            <CardTitle>{t('profilePage.projectStats')}</CardTitle>
+                            <CardDescription>{t('profilePage.projectStatsDesc')}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-3 gap-4">
@@ -209,21 +211,21 @@ export default function ProfilePage() {
                                         <Building2 className="h-5 w-5 text-primary" />
                                     </div>
                                     <p className="text-3xl font-bold">{totalProjects}</p>
-                                    <p className="text-sm text-muted-foreground mt-1">Total Projects</p>
+                                    <p className="text-sm text-muted-foreground mt-1">{t('profilePage.totalProjects')}</p>
                                 </div>
                                 <div className="rounded-lg border bg-card p-4 text-center">
                                     <div className="flex items-center justify-center mb-2">
                                         <Clock className="h-5 w-5 text-amber-600" />
                                     </div>
                                     <p className="text-3xl font-bold">{activeProjects}</p>
-                                    <p className="text-sm text-muted-foreground mt-1">Active Projects</p>
+                                    <p className="text-sm text-muted-foreground mt-1">{t('profilePage.activeProjects')}</p>
                                 </div>
                                 <div className="rounded-lg border bg-card p-4 text-center">
                                     <div className="flex items-center justify-center mb-2">
                                         <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                                     </div>
                                     <p className="text-3xl font-bold">{completedProjects}</p>
-                                    <p className="text-sm text-muted-foreground mt-1">Completed</p>
+                                    <p className="text-sm text-muted-foreground mt-1">{t('profilePage.completed')}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -232,22 +234,22 @@ export default function ProfilePage() {
                     {/* Public Profile Info Card */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Public Profile</CardTitle>
-                            <CardDescription>Information visible to other team members</CardDescription>
+                            <CardTitle>{t('profilePage.publicProfile')}</CardTitle>
+                            <CardDescription>{t('profilePage.publicProfileDesc')}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                                 <User className="h-5 w-5 text-muted-foreground" />
                                 <div>
                                     <p className="text-sm font-medium">{user.full_name}</p>
-                                    <p className="text-xs text-muted-foreground">Full Name</p>
+                                    <p className="text-xs text-muted-foreground">{t('profilePage.fullNameLabel')}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                                 <Mail className="h-5 w-5 text-muted-foreground" />
                                 <div>
                                     <p className="text-sm font-medium">{user.email}</p>
-                                    <p className="text-xs text-muted-foreground">Email Address</p>
+                                    <p className="text-xs text-muted-foreground">{t('profilePage.emailLabel')}</p>
                                 </div>
                             </div>
                             {user.phone_number && (
@@ -255,7 +257,7 @@ export default function ProfilePage() {
                                     <Phone className="h-5 w-5 text-muted-foreground" />
                                     <div>
                                         <p className="text-sm font-medium">{user.phone_number}</p>
-                                        <p className="text-xs text-muted-foreground">Phone Number</p>
+                                        <p className="text-xs text-muted-foreground">{t('profilePage.phoneLabel')}</p>
                                     </div>
                                 </div>
                             )}

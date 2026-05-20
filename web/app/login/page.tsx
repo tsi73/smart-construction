@@ -11,6 +11,8 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth-context'
 import { GoogleSignInButton } from '@/components/google-sign-in-button'
+import { useLanguage } from '@/lib/language-context'
+import { LanguagePicker } from '@/components/language-picker'
 
 export default function LoginPage() {
   return (
@@ -24,6 +26,7 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { login, isLoading } = useAuth()
+  const { t } = useLanguage()
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState(searchParams.get('email') || '')
   const [password, setPassword] = useState('')
@@ -50,22 +53,25 @@ function LoginForm() {
     <div className="min-h-screen bg-primary flex">
       {/* Left Panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12">
-        <div className="flex items-center gap-3 text-primary-foreground">
-          <Image src="/logo-construction pro-1.png" alt="Foresite" width={48} height={48} className="h-30 w-30 object-contain" />
-          <span className="font-bold text-2xl">Foresite</span>
+        <div className="flex items-center justify-between text-primary-foreground w-full">
+          <div className="flex items-center gap-3">
+            <Image src="/logo-construction pro-1.png" alt="Foresite" width={48} height={48} className="h-30 w-30 object-contain" />
+            <span className="font-bold text-2xl">Foresite</span>
+          </div>
+          <LanguagePicker />
         </div>
 
         <div className="space-y-6">
           <h1 className="text-4xl font-bold text-primary-foreground text-balance">
-            Manage your construction projects with ease
+            {t('auth.leftTitleLogin')}
           </h1>
           <p className="text-lg text-primary-foreground/80 max-w-md">
-            Track progress, manage teams, and predict risks all in one platform designed for construction professionals.
+            {t('auth.leftSubtitleLogin')}
           </p>
         </div>
 
         <p className="text-sm text-primary-foreground/60">
-          &copy; {new Date().getFullYear()} Foresite. All rights reserved.
+          &copy; {new Date().getFullYear()} {t('footer.allRightsReserved')}
         </p>
       </div>
 
@@ -73,13 +79,16 @@ function LoginForm() {
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <Card className="w-full max-w-md border-0 shadow-lg">
           <CardHeader className="space-y-1 text-center">
-            <div className="flex items-center justify-center gap-2 mb-4 lg:hidden">
-              <Image src="/logo-construction pro-1.png" alt="Foresite" width={40} height={40} className="h-10 w-10 object-contain" />
-              <span className="font-bold text-xl text-foreground">Foresite</span>
+            <div className="flex items-center justify-between mb-4 lg:hidden w-full">
+              <div className="flex items-center gap-2">
+                <Image src="/logo-construction pro-1.png" alt="Foresite" width={40} height={40} className="h-10 w-10 object-contain" />
+                <span className="font-bold text-xl text-foreground">Foresite</span>
+              </div>
+              <LanguagePicker />
             </div>
-            <CardTitle className="text-2xl">Welcome back</CardTitle>
+            <CardTitle className="text-2xl">{t('auth.loginTitle')}</CardTitle>
             <CardDescription>
-              Enter your credentials to access your account
+              {t('auth.loginSubtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -91,11 +100,11 @@ function LoginForm() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('auth.emailLabel')}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="name@company.com"
+                  placeholder={t('auth.emailPlaceholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
@@ -103,12 +112,12 @@ function LoginForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('auth.passwordLabel')}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter your password"
+                    placeholder={t('auth.passwordPlaceholder')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}
@@ -134,10 +143,10 @@ function LoginForm() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
+                    {t('auth.signingIn')}
                   </>
                 ) : (
-                  'Sign in'
+                  t('auth.signinBtn')
                 )}
               </Button>
 
@@ -147,19 +156,23 @@ function LoginForm() {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with
+                    {t('auth.orContinueWith')}
                   </span>
                 </div>
               </div>
 
               <GoogleSignInButton onError={setError} />
 
-              <p className="text-center text-sm text-muted-foreground">
-                {"Don't have an account? "}
-                <Link href="/signup" className="text-accent hover:underline font-medium">
-                  Sign up
-                </Link>
-              </p>
+              <div className="space-y-2 text-sm text-center">
+                <div className="flex items-center justify-center gap-2 mt-2">
+                  <p className="text-muted-foreground">
+                    {t('auth.dontHaveAccount')}{' '}
+                    <Link href="/signup" className="text-accent hover:underline font-medium">
+                      {t('auth.signupLink')}
+                    </Link>
+                  </p>
+                </div>
+              </div>
             </form>
           </CardContent>
         </Card>

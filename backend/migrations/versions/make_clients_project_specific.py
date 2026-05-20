@@ -29,6 +29,9 @@ def upgrade():
         WHERE projects.client_id = clients.id
     """)
     
+    # Step 2.5: Delete orphan clients that are not associated with any project
+    op.execute("DELETE FROM clients WHERE project_id IS NULL")
+    
     # Step 3: Make project_id NOT NULL now that data is migrated
     op.alter_column('clients', 'project_id', nullable=False)
     
@@ -36,13 +39,32 @@ def upgrade():
     op.create_index(op.f('ix_clients_project_id'), 'clients', ['project_id'], unique=False)
     op.create_foreign_key('fk_clients_project_id', 'clients', 'projects', ['project_id'], ['id'], ondelete='CASCADE')
     
-    # Step 5: Drop the old client_id column from projects table
-    op.drop_constraint('projects_client_id_fkey', 'projects', type_='foreignkey')
-    op.drop_index('ix_projects_client_id', table_name='projects')
-    op.drop_column('projects', 'client_id')
+    # Step 5: Drop the old client_id column from projects table safely
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
     
-    # Step 6: Drop the contractors table (no longer needed)
-    op.drop_table('contractors')
+    # Drop foreign key constraint safely
+    fkeys = [fk['name'] for fk in inspector.get_foreign_keys('projects')]
+    if 'projects_client_id_fkey' in fkeys:
+        op.drop_constraint('projects_client_id_fkey', 'projects', type_='foreignkey')
+    else:
+        for fk in inspector.get_foreign_keys('projects'):
+            if fk['constrained_columns'] == ['client_id'] and fk['name']:
+                op.drop_constraint(fk['name'], 'projects', type_='foreignkey')
+                
+    # Drop index safely
+    indexes = [idx['name'] for idx in inspector.get_indexes('projects')]
+    if 'ix_projects_client_id' in indexes:
+        op.drop_index('ix_projects_client_id', table_name='projects')
+        
+    # Drop column if it exists
+    columns = [c['name'] for c in inspector.get_columns('projects')]
+    if 'client_id' in columns:
+        op.drop_column('projects', 'client_id')
+    
+    # Step 6: Drop the contractors table safely (no longer needed)
+    if 'contractors' in inspector.get_table_names():
+        op.drop_table('contractors')
 
 
 def downgrade():

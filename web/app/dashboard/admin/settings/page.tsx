@@ -12,11 +12,13 @@ import { getSystemSettings, updateSystemSettings } from '@/lib/api'
 import type { SystemSettingsStructured } from '@/lib/api-types'
 import { Loader2, Save, Settings, ArrowLeft } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useLanguage } from '@/lib/language-context'
 
 export default function AdminSettingsPage() {
     const router = useRouter()
     const { user, isAuthenticated, isLoading: authLoading } = useAuth()
     const { toast } = useToast()
+    const { t } = useLanguage()
     const [settings, setSettings] = useState<SystemSettingsStructured | null>(null)
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -46,7 +48,7 @@ export default function AdminSettingsPage() {
                     }
                 } catch (err) {
                     if (!cancelled) {
-                        setError(err instanceof Error ? err.message : 'Failed to load settings')
+                        setError(err instanceof Error ? err.message : t('systemSettingsPage.failedToLoad'))
                     }
                 } finally {
                     if (!cancelled) {
@@ -68,13 +70,13 @@ export default function AdminSettingsPage() {
             const updated = await updateSystemSettings(settings)
             setSettings(updated)
             toast({
-                title: 'Success',
-                description: 'System settings updated successfully',
+                title: t('systemSettingsPage.success'),
+                description: t('systemSettingsPage.updatedSuccess'),
             })
         } catch (err) {
             toast({
-                title: 'Error',
-                description: err instanceof Error ? err.message : 'Failed to update settings',
+                title: t('systemSettingsPage.error'),
+                description: err instanceof Error ? err.message : t('systemSettingsPage.failedToUpdate'),
                 variant: 'destructive',
             })
         } finally {
@@ -105,23 +107,23 @@ export default function AdminSettingsPage() {
     return (
         <div className="p-8 space-y-8">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">System Settings</h1>
-                <p className="text-muted-foreground mt-2">Configure platform-wide settings and preferences</p>
+                <h1 className="text-3xl font-bold tracking-tight">{t('systemSettingsPage.title')}</h1>
+                <p className="text-muted-foreground mt-2">{t('systemSettingsPage.subtitle')}</p>
             </div>
 
             <div className="grid gap-6 max-w-4xl">
                 {/* Working Hours Configuration */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Working Hours Configuration</CardTitle>
+                        <CardTitle>{t('systemSettingsPage.workingHoursTitle')}</CardTitle>
                         <CardDescription>
-                            Configure standard working hours and days for labor cost calculations
+                            {t('systemSettingsPage.workingHoursDesc')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
-                                <Label htmlFor="working_hours_per_day">Working Hours Per Day</Label>
+                                <Label htmlFor="working_hours_per_day">{t('systemSettingsPage.workingHoursPerDay')}</Label>
                                 <Input
                                     id="working_hours_per_day"
                                     type="number"
@@ -136,12 +138,12 @@ export default function AdminSettingsPage() {
                                     }
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    Standard hours per shift (used for labor cost calculations)
+                                    {t('systemSettingsPage.workingHoursPerDaySub')}
                                 </p>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="working_days_per_week">Working Days Per Week</Label>
+                                <Label htmlFor="working_days_per_week">{t('systemSettingsPage.workingDaysPerWeek')}</Label>
                                 <Input
                                     id="working_days_per_week"
                                     type="number"
@@ -155,13 +157,13 @@ export default function AdminSettingsPage() {
                                     }
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    Typical working days per week (Ethiopian construction: 6)
+                                    {t('systemSettingsPage.workingDaysPerWeekSub')}
                                 </p>
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="overtime_multiplier">Overtime Multiplier</Label>
+                            <Label htmlFor="overtime_multiplier">{t('systemSettingsPage.overtimeMultiplier')}</Label>
                             <Input
                                 id="overtime_multiplier"
                                 type="number"
@@ -176,7 +178,7 @@ export default function AdminSettingsPage() {
                                 }
                             />
                             <p className="text-xs text-muted-foreground">
-                                Overtime cost = hourly_rate × overtime_multiplier (default: 1.5x)
+                                {t('systemSettingsPage.overtimeMultiplierSub')}
                             </p>
                         </div>
                     </CardContent>
@@ -185,14 +187,14 @@ export default function AdminSettingsPage() {
                 {/* Alert Thresholds */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Alert Thresholds</CardTitle>
+                        <CardTitle>{t('systemSettingsPage.alertThresholdsTitle')}</CardTitle>
                         <CardDescription>
-                            Configure automatic alerts for project delays and budget overruns
+                            {t('systemSettingsPage.alertThresholdsDesc')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="delay_risk_threshold_pct">Delay Risk Threshold (%)</Label>
+                            <Label htmlFor="delay_risk_threshold_pct">{t('systemSettingsPage.delayRiskThreshold')}</Label>
                             <Input
                                 id="delay_risk_threshold_pct"
                                 type="number"
@@ -206,13 +208,12 @@ export default function AdminSettingsPage() {
                                 }
                             />
                             <p className="text-xs text-muted-foreground">
-                                When ML risk score exceeds this %, project status changes to "at_risk" and PM receives
-                                alert (default: 60%)
+                                {t('systemSettingsPage.delayRiskThresholdSub')}
                             </p>
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="budget_alert_threshold_pct">Budget Alert Threshold (%)</Label>
+                            <Label htmlFor="budget_alert_threshold_pct">{t('systemSettingsPage.budgetAlertThreshold')}</Label>
                             <Input
                                 id="budget_alert_threshold_pct"
                                 type="number"
@@ -226,7 +227,7 @@ export default function AdminSettingsPage() {
                                 }
                             />
                             <p className="text-xs text-muted-foreground">
-                                When total_spent / contract_value crosses this %, PM receives budget alert (default: 80%)
+                                {t('systemSettingsPage.budgetAlertThresholdSub')}
                             </p>
                         </div>
                     </CardContent>
@@ -235,17 +236,17 @@ export default function AdminSettingsPage() {
                 {/* Maintenance Mode */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Maintenance Mode</CardTitle>
+                        <CardTitle>{t('systemSettingsPage.maintenanceModeTitle')}</CardTitle>
                         <CardDescription>
-                            Block all non-admin logins for deployments, migrations, or system maintenance
+                            {t('systemSettingsPage.maintenanceModeDesc')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
-                                <Label htmlFor="maintenance_mode">Enable Maintenance Mode</Label>
+                                <Label htmlFor="maintenance_mode">{t('systemSettingsPage.enableMaintenance')}</Label>
                                 <p className="text-sm text-muted-foreground">
-                                    When enabled, only admins can access the system
+                                    {t('systemSettingsPage.enableMaintenanceSub')}
                                 </p>
                             </div>
                             <Switch
@@ -265,12 +266,12 @@ export default function AdminSettingsPage() {
                         {saving ? (
                             <>
                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                Saving...
+                                {t('systemSettingsPage.saving')}
                             </>
                         ) : (
                             <>
                                 <Save className="h-4 w-4" />
-                                Save Settings
+                                {t('systemSettingsPage.saveSettings')}
                             </>
                         )}
                     </Button>

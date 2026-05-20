@@ -18,24 +18,28 @@ depends_on = None
 
 
 def upgrade():
-    # Remove activities column from daily_logs table (if it exists)
-    try:
+    # Check if activities column exists before dropping it
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    columns = [c['name'] for c in inspector.get_columns('daily_logs')]
+    if 'activities' in columns:
         op.drop_column('daily_logs', 'activities')
-    except:
-        pass  # Column might not exist
     
-    # Create daily_log_activities table
-    op.create_table(
-        'daily_log_activities',
-        sa.Column('id', UUID(as_uuid=True), primary_key=True),
-        sa.Column('log_id', UUID(as_uuid=True), sa.ForeignKey('daily_logs.id'), nullable=False),
-        sa.Column('task_activity_id', UUID(as_uuid=True), sa.ForeignKey('task_activities.id'), nullable=False),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    )
-    
-    # Create indexes
-    op.create_index('ix_daily_log_activities_log_id', 'daily_log_activities', ['log_id'])
-    op.create_index('ix_daily_log_activities_task_activity_id', 'daily_log_activities', ['task_activity_id'])
+    # Check if table daily_log_activities exists before creating it
+    tables = inspector.get_table_names()
+    if 'daily_log_activities' not in tables:
+        # Create daily_log_activities table
+        op.create_table(
+            'daily_log_activities',
+            sa.Column('id', UUID(as_uuid=True), primary_key=True),
+            sa.Column('log_id', UUID(as_uuid=True), sa.ForeignKey('daily_logs.id'), nullable=False),
+            sa.Column('task_activity_id', UUID(as_uuid=True), sa.ForeignKey('task_activities.id'), nullable=False),
+            sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        )
+        
+        # Create indexes
+        op.create_index('ix_daily_log_activities_log_id', 'daily_log_activities', ['log_id'])
+        op.create_index('ix_daily_log_activities_task_activity_id', 'daily_log_activities', ['task_activity_id'])
 
 
 def downgrade():

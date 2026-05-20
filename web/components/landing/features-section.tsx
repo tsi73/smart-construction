@@ -1,49 +1,54 @@
+'use client'
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ClipboardList, Users, BarChart3, Shield, Clock, Zap } from 'lucide-react'
-
-const features = [
-  {
-    icon: ClipboardList,
-    title: 'Daily Log Management',
-    description: 'Submit and track daily work logs with multi-level approval workflow from site engineers to project managers.',
-  },
-  {
-    icon: Users,
-    title: 'Role-Based Access',
-    description: 'Granular permissions for Project Managers, Office Engineers, Consultants, and Site Engineers.',
-  },
-  {
-    icon: BarChart3,
-    title: 'Real-Time Analytics',
-    description: 'Monitor project progress, budget utilization, and resource allocation with interactive dashboards.',
-  },
-  {
-    icon: Shield,
-    title: 'Risk Prediction',
-    description: 'AI-powered risk assessment to identify potential delays and budget overruns before they happen.',
-  },
-  {
-    icon: Clock,
-    title: 'Weather Alerts',
-    description: 'Real-time weather alerts to help you plan your work accordingly.',
-  },
-  {
-    icon: Zap,
-    title: 'Instant Notifications',
-    description: 'Stay informed with real-time alerts for log approvals, task assignments, and project updates.',
-  },
-]
+import { useLanguage } from '@/lib/language-context'
 
 export function FeaturesSection() {
+  const { t } = useLanguage()
+
+  const features = [
+    {
+      icon: ClipboardList,
+      title: t('features.items.dailyLogsTitle'),
+      description: t('features.items.dailyLogsDesc'),
+    },
+    {
+      icon: Users,
+      title: t('features.items.roleAccessTitle'),
+      description: t('features.items.roleAccessDesc'),
+    },
+    {
+      icon: BarChart3,
+      title: t('features.items.analyticsTitle'),
+      description: t('features.items.analyticsDesc'),
+    },
+    {
+      icon: Shield,
+      title: t('features.items.riskPredictTitle'),
+      description: t('features.items.riskPredictDesc'),
+    },
+    {
+      icon: Clock,
+      title: t('features.items.weatherTitle'),
+      description: t('features.items.weatherDesc'),
+    },
+    {
+      icon: Zap,
+      title: t('features.items.notificationsTitle'),
+      description: t('features.items.notificationsDesc'),
+    },
+  ]
+
   return (
     <section className="py-20 bg-background">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-foreground">
-            Everything You Need to Manage Construction Projects
+            {t('features.title')}
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            From daily logs to budget tracking, our platform provides all the tools you need for efficient project management.
+            {t('features.subtitle')}
           </p>
         </div>
         

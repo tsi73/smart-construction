@@ -1,7 +1,11 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Building2, ArrowRight } from 'lucide-react'
+import { useLanguage } from '@/lib/language-context'
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1'
 
 interface HeroSectionProps {
   onOpenDashboard: () => void
@@ -9,6 +13,16 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ onOpenDashboard, isAuthenticated }: HeroSectionProps) {
+  const { t } = useLanguage()
+  const [stats, setStats] = useState({ active_projects: 0, team_members: 0 })
+
+  useEffect(() => {
+    fetch(`${API_BASE}/landing/stats`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setStats(data) })
+      .catch(() => {})
+  }, [])
+
   return (
     <section className="relative bg-primary text-primary-foreground">
       {/* Background Pattern */}
@@ -24,17 +38,16 @@ export function HeroSection({ onOpenDashboard, isAuthenticated }: HeroSectionPro
           <div className="space-y-8">
             <div className="flex items-center gap-2 text-primary-foreground/80">
               <Building2 className="h-6 w-6" />
-              <span className="text-sm font-medium uppercase tracking-wider">Construction Project Management</span>
+              <span className="text-sm font-medium uppercase tracking-wider">{t('hero.tagline')}</span>
             </div>
 
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl text-balance">
-              Building Better,{' '}
-              <span className="text-accent">Building Smarter</span>
+              {t('hero.title1')}{' '}
+              <span className="text-accent">{t('hero.title2')}</span>
             </h1>
 
             <p className="text-lg text-primary-foreground/80 max-w-xl leading-relaxed">
-              Streamline your construction projects with our comprehensive management platform.
-              Track progress, manage resources, and predict risks with AI-powered insights.
+              {t('hero.subtitle')}
             </p>
 
             <div className="flex flex-wrap gap-4">
@@ -44,7 +57,7 @@ export function HeroSection({ onOpenDashboard, isAuthenticated }: HeroSectionPro
                 className="gap-2 font-semibold cursor-pointer"
                 onClick={onOpenDashboard}
               >
-                {isAuthenticated ? 'Open Dashboard' : 'Get Started'}
+                {isAuthenticated ? t('nav.openDashboard') : t('hero.getStarted')}
                 <ArrowRight className="h-4 w-4" />
               </Button>
               <Button
@@ -52,10 +65,21 @@ export function HeroSection({ onOpenDashboard, isAuthenticated }: HeroSectionPro
                 variant="outline"
                 className="border-primary-foreground/30 text-primary hover:bg-primary-foreground/10 hover:text-primary-foreground cursor-pointer"
               >
-                Learn More
+                {t('hero.learnMore')}
               </Button>
             </div>
-
+            
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-8 pt-8 border-t border-primary-foreground/20">
+              <div>
+                <div className="text-3xl font-bold">{stats.active_projects}+</div>
+                <div className="text-sm text-primary-foreground/70">{t('hero.activeProjects')}</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold">{stats.team_members}+</div>
+                <div className="text-sm text-primary-foreground/70">{t('hero.teamMembers')}</div>
+              </div>
+            </div>
           </div>
 
           {/* Right Image Placeholder */}
@@ -74,8 +98,8 @@ export function HeroSection({ onOpenDashboard, isAuthenticated }: HeroSectionPro
                   <Building2 className="h-6 w-6 text-accent" />
                 </div>
                 <div>
-                  <div className="font-semibold text-sm">Project Progress</div>
-                  <div className="text-xs text-muted-foreground">Real-time tracking & analytics</div>
+                  <div className="font-semibold text-sm">{t('hero.projectProgress')}</div>
+                  <div className="text-xs text-muted-foreground">{t('hero.progressSub')}</div>
                 </div>
               </div>
             </div>

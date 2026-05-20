@@ -18,23 +18,28 @@ depends_on = None
 
 
 def upgrade():
-    # Create announcements table
-    op.create_table(
-        'announcements',
-        sa.Column('id', UUID(as_uuid=True), primary_key=True),
-        sa.Column('title', sa.String(255), nullable=False),
-        sa.Column('content', sa.Text(), nullable=False),
-        sa.Column('priority', sa.String(50), server_default='normal', nullable=False),
-        sa.Column('is_active', sa.Boolean(), server_default='true', nullable=False),
-        sa.Column('created_by', UUID(as_uuid=True), sa.ForeignKey('users.id'), nullable=False),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-        sa.Column('expires_at', sa.DateTime(timezone=True), nullable=True),
-    )
-    
-    # Create indexes
-    op.create_index('ix_announcements_id', 'announcements', ['id'])
-    op.create_index('ix_announcements_is_active', 'announcements', ['is_active'])
-    op.create_index('ix_announcements_created_at', 'announcements', ['created_at'])
+    # Check if announcements table exists before creating it
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    tables = inspector.get_table_names()
+    if 'announcements' not in tables:
+        # Create announcements table
+        op.create_table(
+            'announcements',
+            sa.Column('id', UUID(as_uuid=True), primary_key=True),
+            sa.Column('title', sa.String(255), nullable=False),
+            sa.Column('content', sa.Text(), nullable=False),
+            sa.Column('priority', sa.String(50), server_default='normal', nullable=False),
+            sa.Column('is_active', sa.Boolean(), server_default='true', nullable=False),
+            sa.Column('created_by', UUID(as_uuid=True), sa.ForeignKey('users.id'), nullable=False),
+            sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+            sa.Column('expires_at', sa.DateTime(timezone=True), nullable=True),
+        )
+        
+        # Create indexes
+        op.create_index('ix_announcements_id', 'announcements', ['id'])
+        op.create_index('ix_announcements_is_active', 'announcements', ['is_active'])
+        op.create_index('ix_announcements_created_at', 'announcements', ['created_at'])
 
 
 def downgrade():

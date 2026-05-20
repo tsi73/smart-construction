@@ -27,9 +27,25 @@ def upgrade():
     op.create_index(op.f('ix_suppliers_project_id'), 'suppliers', ['project_id'], unique=False)
     op.create_foreign_key('fk_suppliers_project_id', 'suppliers', 'projects', ['project_id'], ['id'])
     
-    # Update Client model fields (remove unique constraints, adjust lengths)
-    op.drop_constraint('clients_name_key', 'clients', type_='unique')
-    op.drop_constraint('clients_contact_email_key', 'clients', type_='unique')
+    # Get unique constraints on clients table and drop name / contact_email constraints if they exist
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    unique_constraints = inspector.get_unique_constraints('clients')
+    uc_names = [uc['name'] for uc in unique_constraints if uc['name']]
+    
+    if 'clients_name_key' in uc_names:
+        op.drop_constraint('clients_name_key', 'clients', type_='unique')
+    else:
+        for uc in unique_constraints:
+            if uc['column_names'] == ['name'] and uc['name']:
+                op.drop_constraint(uc['name'], 'clients', type_='unique')
+                
+    if 'clients_contact_email_key' in uc_names:
+        op.drop_constraint('clients_contact_email_key', 'clients', type_='unique')
+    else:
+        for uc in unique_constraints:
+            if uc['column_names'] == ['contact_email'] and uc['name']:
+                op.drop_constraint(uc['name'], 'clients', type_='unique')
     op.alter_column('clients', 'name', type_=sa.String(200), existing_type=sa.String(255))
     op.alter_column('clients', 'contact_email', type_=sa.String(150), existing_type=sa.String(255))
     op.add_column('clients', sa.Column('tin_number', sa.String(20), nullable=True))

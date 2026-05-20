@@ -33,11 +33,13 @@ import {
 import type { AnnouncementItem } from '@/lib/api-types'
 import { Loader2, Plus, Edit, Trash2, ArrowLeft } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useLanguage } from '@/lib/language-context'
 
 export default function AdminAnnouncementsPage() {
     const router = useRouter()
     const { user, isAuthenticated, isLoading: authLoading } = useAuth()
     const { toast } = useToast()
+    const { t } = useLanguage()
     const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -67,7 +69,7 @@ export default function AdminAnnouncementsPage() {
             const data = await listAllAnnouncements()
             setAnnouncements(data)
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load announcements')
+            setError(err instanceof Error ? err.message : t('announcementsPage.failedToLoad'))
         } finally {
             setLoading(false)
         }
@@ -104,8 +106,8 @@ export default function AdminAnnouncementsPage() {
     const handleSave = async () => {
         if (!formData.content) {
             toast({
-                title: 'Error',
-                description: 'Content is required',
+                title: t('announcementsPage.error'),
+                description: t('announcementsPage.contentRequired'),
                 variant: 'destructive',
             })
             return
@@ -126,14 +128,14 @@ export default function AdminAnnouncementsPage() {
             if (editingAnnouncement) {
                 await updateAnnouncement(editingAnnouncement.id, payload)
                 toast({
-                    title: 'Success',
-                    description: 'Announcement updated successfully',
+                    title: t('announcementsPage.success'),
+                    description: t('announcementsPage.updatedSuccess'),
                 })
             } else {
                 await createAnnouncement(payload)
                 toast({
-                    title: 'Success',
-                    description: 'Announcement created successfully',
+                    title: t('announcementsPage.success'),
+                    description: t('announcementsPage.createdSuccess'),
                 })
             }
 
@@ -141,8 +143,8 @@ export default function AdminAnnouncementsPage() {
             loadAnnouncements()
         } catch (err) {
             toast({
-                title: 'Error',
-                description: err instanceof Error ? err.message : 'Failed to save announcement',
+                title: t('announcementsPage.error'),
+                description: err instanceof Error ? err.message : t('announcementsPage.failedToSave'),
                 variant: 'destructive',
             })
         } finally {
@@ -151,19 +153,19 @@ export default function AdminAnnouncementsPage() {
     }
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this announcement?')) return
+        if (!confirm(t('announcementsPage.confirmDelete'))) return
 
         try {
             await deleteAnnouncement(id)
             toast({
-                title: 'Success',
-                description: 'Announcement deleted successfully',
+                title: t('announcementsPage.success'),
+                description: t('announcementsPage.deletedSuccess'),
             })
             loadAnnouncements()
         } catch (err) {
             toast({
-                title: 'Error',
-                description: err instanceof Error ? err.message : 'Failed to delete announcement',
+                title: t('announcementsPage.error'),
+                description: err instanceof Error ? err.message : t('announcementsPage.failedToDelete'),
                 variant: 'destructive',
             })
         }
@@ -175,14 +177,14 @@ export default function AdminAnnouncementsPage() {
                 is_active: !announcement.is_active,
             })
             toast({
-                title: 'Success',
-                description: `Announcement ${announcement.is_active ? 'deactivated' : 'activated'}`,
+                title: t('announcementsPage.success'),
+                description: announcement.is_active ? t('announcementsPage.deactivatedSuccess') : t('announcementsPage.activatedSuccess'),
             })
             loadAnnouncements()
         } catch (err) {
             toast({
-                title: 'Error',
-                description: err instanceof Error ? err.message : 'Failed to update announcement',
+                title: t('announcementsPage.error'),
+                description: err instanceof Error ? err.message : t('announcementsPage.failedToUpdate'),
                 variant: 'destructive',
             })
         }
@@ -201,13 +203,13 @@ export default function AdminAnnouncementsPage() {
     const getPriorityBadge = (priority: string) => {
         switch (priority) {
             case 'urgent':
-                return <Badge variant="destructive">Urgent</Badge>
+                return <Badge variant="destructive">{t('announcementsPage.priorityUrgent')}</Badge>
             case 'high':
-                return <Badge className="bg-orange-500">High</Badge>
+                return <Badge className="bg-orange-500">{t('announcementsPage.priorityHigh')}</Badge>
             case 'normal':
-                return <Badge variant="secondary">Normal</Badge>
+                return <Badge variant="secondary">{t('announcementsPage.priorityNormal')}</Badge>
             case 'low':
-                return <Badge variant="outline">Low</Badge>
+                return <Badge variant="outline">{t('announcementsPage.priorityLow')}</Badge>
             default:
                 return <Badge variant="secondary">{priority}</Badge>
         }
@@ -217,19 +219,19 @@ export default function AdminAnnouncementsPage() {
         <div className="p-8 space-y-8">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Announcements</h1>
-                    <p className="text-muted-foreground mt-2">Create and manage platform-wide announcements</p>
+                    <h1 className="text-3xl font-bold tracking-tight">{t('announcementsPage.title')}</h1>
+                    <p className="text-muted-foreground mt-2">{t('announcementsPage.subtitle')}</p>
                 </div>
                 <Button onClick={() => handleOpenDialog()} className="gap-2">
                     <Plus className="h-4 w-4" />
-                    New Announcement
+                    {t('announcementsPage.newAnnouncement')}
                 </Button>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>All Announcements</CardTitle>
-                    <CardDescription>Manage announcements visible to all users</CardDescription>
+                    <CardTitle>{t('announcementsPage.allAnnouncements')}</CardTitle>
+                    <CardDescription>{t('announcementsPage.allAnnouncementsDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {error ? (
@@ -242,7 +244,7 @@ export default function AdminAnnouncementsPage() {
                         </div>
                     ) : announcements.length === 0 ? (
                         <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                            No announcements yet.
+                            {t('announcementsPage.noAnnouncements')}
                         </div>
                     ) : (
                         <div className="space-y-2">
@@ -254,9 +256,9 @@ export default function AdminAnnouncementsPage() {
                                     <div className="flex items-center gap-2 shrink-0">
                                         {getPriorityBadge(announcement.priority)}
                                         {announcement.is_active ? (
-                                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Active</Badge>
+                                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{t('announcementsPage.active')}</Badge>
                                         ) : (
-                                            <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">Inactive</Badge>
+                                            <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">{t('announcementsPage.inactive')}</Badge>
                                         )}
                                         <Badge variant="outline" className="text-[10px]">
                                             {announcement.expires_at
@@ -265,7 +267,7 @@ export default function AdminAnnouncementsPage() {
                                                     day: 'numeric',
                                                     year: 'numeric',
                                                 })
-                                                : 'No expiry'}
+                                                : t('announcementsPage.noExpiry')}
                                         </Badge>
                                         <Button variant="ghost" size="icon" onClick={() => handleToggleActive(announcement)}>
                                             {announcement.is_active ? '—' : '+'}
@@ -292,29 +294,29 @@ export default function AdminAnnouncementsPage() {
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent className="max-w-xl">
                     <DialogHeader>
-                        <DialogTitle>{editingAnnouncement ? 'Edit Announcement' : 'Create Announcement'}</DialogTitle>
+                        <DialogTitle>{editingAnnouncement ? t('announcementsPage.editAnnouncement') : t('announcementsPage.createAnnouncement')}</DialogTitle>
                         <DialogDescription>
                             {editingAnnouncement
-                                ? 'Update the announcement details'
-                                : 'Create a new platform-wide announcement'}
+                                ? t('announcementsPage.editAnnouncementDesc')
+                                : t('announcementsPage.createAnnouncementDesc')}
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="content">Content</Label>
+                            <Label htmlFor="content">{t('announcementsPage.content')}</Label>
                             <Textarea
                                 id="content"
                                 value={formData.content}
                                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                                placeholder="Announcement content"
+                                placeholder={t('announcementsPage.contentPlaceholder')}
                                 rows={4}
                             />
                         </div>
 
                         <div className="grid gap-4 sm:grid-cols-3">
                             <div className="space-y-2">
-                                <Label htmlFor="priority">Priority</Label>
+                                <Label htmlFor="priority">{t('announcementsPage.priority')}</Label>
                                 <Select
                                     value={formData.priority}
                                     onValueChange={(value) => setFormData({ ...formData, priority: value })}
@@ -323,16 +325,16 @@ export default function AdminAnnouncementsPage() {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="low">Low</SelectItem>
-                                        <SelectItem value="normal">Normal</SelectItem>
-                                        <SelectItem value="high">High</SelectItem>
-                                        <SelectItem value="urgent">Urgent</SelectItem>
+                                        <SelectItem value="low">{t('announcementsPage.priorityLow')}</SelectItem>
+                                        <SelectItem value="normal">{t('announcementsPage.priorityNormal')}</SelectItem>
+                                        <SelectItem value="high">{t('announcementsPage.priorityHigh')}</SelectItem>
+                                        <SelectItem value="urgent">{t('announcementsPage.priorityUrgent')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="target_audience">Audience</Label>
+                                <Label htmlFor="target_audience">{t('announcementsPage.audience')}</Label>
                                 <Select
                                     value={formData.target_audience}
                                     onValueChange={(value) => setFormData({ ...formData, target_audience: value as 'all' | 'admins' | 'project_managers' })}
@@ -341,15 +343,15 @@ export default function AdminAnnouncementsPage() {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Users</SelectItem>
-                                        <SelectItem value="admins">Admins Only</SelectItem>
-                                        <SelectItem value="project_managers">Project Managers</SelectItem>
+                                        <SelectItem value="all">{t('announcementsPage.audienceAll')}</SelectItem>
+                                        <SelectItem value="admins">{t('announcementsPage.audienceAdmins')}</SelectItem>
+                                        <SelectItem value="project_managers">{t('announcementsPage.audiencePMs')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="expires_at">Expires At (Optional)</Label>
+                                <Label htmlFor="expires_at">{t('announcementsPage.expiresAt')}</Label>
                                 <Input
                                     id="expires_at"
                                     type="datetime-local"
@@ -362,18 +364,18 @@ export default function AdminAnnouncementsPage() {
 
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>
-                            Cancel
+                            {t('announcementsPage.cancel')}
                         </Button>
                         <Button onClick={handleSave} disabled={saving}>
                             {saving ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Saving...
+                                    {t('announcementsPage.saving')}
                                 </>
                             ) : editingAnnouncement ? (
-                                'Update'
+                                t('announcementsPage.update')
                             ) : (
-                                'Create'
+                                t('announcementsPage.create')
                             )}
                         </Button>
                     </DialogFooter>

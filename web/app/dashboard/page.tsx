@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth-context'
 import { SiteLogo } from '@/components/site-logo'
 import { ProjectSelectionModal } from '@/components/project-selection-modal'
 import { AnnouncementBanner } from '@/components/announcement-banner'
+import { useLanguage } from '@/lib/language-context'
 import {
   ArrowRight,
   Building2,
@@ -70,7 +71,7 @@ function Row({ k, v, ok }: { k: string; v: string; ok: boolean }) {
   )
 }
 
-function ProjectStatusChart({ stats }: { stats: AdminStatsResponse }) {
+function ProjectStatusChart({ stats, t }: { stats: AdminStatsResponse, t: (key: string) => string }) {
   const chartData = [
     {
       name: 'Planning',
@@ -153,6 +154,7 @@ export default function DashboardProjectListPage() {
   const router = useRouter()
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth()
   const { theme, setTheme } = useTheme()
+  const { t } = useLanguage()
   const [modalOpen, setModalOpen] = useState(false)
   const [projects, setProjects] = useState<ProjectListItem[]>([])
   const [projectsLoading, setProjectsLoading] = useState(false)
@@ -300,33 +302,33 @@ export default function DashboardProjectListPage() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => router.push('/dashboard/profile')}>
                   <User className="mr-2 h-4 w-4" />
-                  Profile
+                  {t('dashboard.profile')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => router.push('/dashboard/settings')}>
                   <Settings className="mr-2 h-4 w-4" />
-                  Settings
+                  {t('dashboard.settings')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
                   {theme === 'dark' ? (
                     <>
                       <Sun className="mr-2 h-4 w-4" />
-                      Light Mode
+                      {t('dashboard.lightMode')}
                     </>
                   ) : (
                     <>
                       <Moon className="mr-2 h-4 w-4" />
-                      Dark Mode
+                      {t('dashboard.darkMode')}
                     </>
                   )}
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setModalOpen(true)}>
                   <Building2 className="mr-2 h-4 w-4" />
-                  Select Project
+                  {t('dashboard.selectProject')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
-                  Logout
+                  {t('dashboard.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -340,13 +342,13 @@ export default function DashboardProjectListPage() {
           <div className="space-y-8">
             <div className="space-y-2">
               <p className="text-sm font-medium uppercase tracking-[0.25em] text-muted-foreground">
-                Admin Dashboard
+                {t('admin.dashboard')}
               </p>
               <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                System Management
+                {t('admin.title')}
               </h1>
               <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
-                Platform statistics and management tools
+                {t('admin.subtitle')}
               </p>
             </div>
 
@@ -361,12 +363,12 @@ export default function DashboardProjectListPage() {
                   {/* Total Users */}
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                      <CardTitle className="text-sm font-medium">{t('admin.totalUsers')}</CardTitle>
                       <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">{stats.total_users}</div>
-                      <p className="text-xs text-muted-foreground">{stats.active_users} active · last 30d signups below</p>
+                      <p className="text-xs text-muted-foreground">{stats.active_users} {t('admin.activeUsers')} · {t('admin.last30dSignups')}</p>
                       <Sparkline data={activitySeries} dataKey="signups" color="#10b981" />
                     </CardContent>
                   </Card>
@@ -374,29 +376,27 @@ export default function DashboardProjectListPage() {
                   {/* Total Projects */}
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
+                      <CardTitle className="text-sm font-medium">{t('admin.totalProjects')}</CardTitle>
                       <Building2 className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">{stats.total_projects}</div>
                       <p className="text-xs text-muted-foreground">
-                        {stats.projects_by_status?.in_progress ?? 0} in progress · audit events below
+                        {stats.projects_by_status?.in_progress ?? 0} {t('admin.inProgress')} · {t('admin.auditEventsBelow')}
                       </p>
                       <Sparkline data={activitySeries} dataKey="audit_events" color="#f59e0b" />
                     </CardContent>
                   </Card>
 
-
-
                   {/* Suppliers */}
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Suppliers</CardTitle>
+                      <CardTitle className="text-sm font-medium">{t('admin.suppliers')}</CardTitle>
                       <Package className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">{stats.total_suppliers}</div>
-                      <p className="text-xs text-muted-foreground">Registered · log approvals below</p>
+                      <p className="text-xs text-muted-foreground">{t('admin.registered')} · {t('admin.logApprovalsBelow')}</p>
                       <Sparkline data={activitySeries} dataKey="log_approvals" color="#a855f7" />
                     </CardContent>
                   </Card>
@@ -407,11 +407,11 @@ export default function DashboardProjectListPage() {
                   {stats.total_projects > 0 && (
                     <Card className="lg:col-span-2">
                       <CardHeader>
-                        <CardTitle>Projects by Status</CardTitle>
-                        <CardDescription>Distribution of projects across different statuses</CardDescription>
+                        <CardTitle>{t('admin.projectsByStatus')}</CardTitle>
+                        <CardDescription>{t('admin.projectsByStatusDesc')}</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <ProjectStatusChart stats={stats} />
+                        <ProjectStatusChart stats={stats} t={t} />
                       </CardContent>
                     </Card>
                   )}
@@ -421,24 +421,24 @@ export default function DashboardProjectListPage() {
                     <Card>
                       <CardHeader>
                         <div className="flex items-center justify-between">
-                          <CardTitle>System Health</CardTitle>
+                          <CardTitle>{t('admin.systemHealth')}</CardTitle>
                           <Badge
                             variant="outline"
                             className={health.status === 'ok'
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                               : 'bg-amber-50 text-amber-700 border-amber-200'}
                           >
-                            {health.status === 'ok' ? 'Healthy' : 'Degraded'}
+                            {health.status === 'ok' ? t('admin.healthy') : t('admin.degraded')}
                           </Badge>
                         </div>
-                        <CardDescription>Live indicators across the platform</CardDescription>
+                        <CardDescription>{t('admin.liveIndicators')}</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3 text-sm">
-                        <Row k="Database" v={health.database.reachable ? 'Reachable' : 'Unreachable'} ok={health.database.reachable} />
-                        <Row k="ML model" v={health.ml_model_loaded ? 'Loaded' : 'Not loaded'} ok={health.ml_model_loaded} />
-                        <Row k="Audit events / hr" v={`${health.audit_events_last_hour}`} ok={health.audit_events_last_hour >= 0} />
+                        <Row k={t('admin.database')} v={health.database.reachable ? t('admin.reachable') : t('admin.unreachable')} ok={health.database.reachable} />
+                        <Row k={t('admin.mlModel')} v={health.ml_model_loaded ? t('admin.loaded') : t('admin.notLoaded')} ok={health.ml_model_loaded} />
+                        <Row k={t('admin.auditEventsHr')} v={`${health.audit_events_last_hour}`} ok={health.audit_events_last_hour >= 0} />
                         <div className="pt-2 mt-2 border-t border-border">
-                          <p className="text-xs uppercase text-muted-foreground mb-1">Row counts</p>
+                          <p className="text-xs uppercase text-muted-foreground mb-1">{t('admin.rowCounts')}</p>
                           <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
                             {Object.entries(health.row_counts).map(([k, v]) => (
                               <div key={k} className="flex justify-between">
@@ -465,8 +465,8 @@ export default function DashboardProjectListPage() {
                     <Users className="h-8 w-8 text-primary" />
                     <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
-                  <CardTitle className="mt-4">User Management</CardTitle>
-                  <CardDescription>Manage system users, roles, and permissions</CardDescription>
+                  <CardTitle className="mt-4">{t('admin.userManagement')}</CardTitle>
+                  <CardDescription>{t('admin.userManagementDesc')}</CardDescription>
                 </CardHeader>
               </Card>
 
@@ -479,8 +479,8 @@ export default function DashboardProjectListPage() {
                     </svg>
                     <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
-                  <CardTitle className="mt-4">Audit Logs</CardTitle>
-                  <CardDescription>View system activity and user actions</CardDescription>
+                  <CardTitle className="mt-4">{t('admin.auditLogs')}</CardTitle>
+                  <CardDescription>{t('admin.auditLogsDesc')}</CardDescription>
                 </CardHeader>
               </Card>
 
@@ -491,8 +491,8 @@ export default function DashboardProjectListPage() {
                     <Settings className="h-8 w-8 text-primary" />
                     <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
-                  <CardTitle className="mt-4">System Settings</CardTitle>
-                  <CardDescription>Configure system-wide settings and preferences</CardDescription>
+                  <CardTitle className="mt-4">{t('admin.systemSettings')}</CardTitle>
+                  <CardDescription>{t('admin.systemSettingsDesc')}</CardDescription>
                 </CardHeader>
               </Card>
 
@@ -505,8 +505,8 @@ export default function DashboardProjectListPage() {
                     </svg>
                     <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
-                  <CardTitle className="mt-4">Announcements</CardTitle>
-                  <CardDescription>Create platform-wide announcements</CardDescription>
+                  <CardTitle className="mt-4">{t('admin.announcements')}</CardTitle>
+                  <CardDescription>{t('admin.announcementsDesc')}</CardDescription>
                 </CardHeader>
               </Card>
 
@@ -519,8 +519,8 @@ export default function DashboardProjectListPage() {
                     </svg>
                     <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
-                  <CardTitle className="mt-4">System Reports</CardTitle>
-                  <CardDescription>Generate and view system-wide reports</CardDescription>
+                  <CardTitle className="mt-4">{t('admin.systemReports')}</CardTitle>
+                  <CardDescription>{t('admin.systemReportsDesc')}</CardDescription>
                 </CardHeader>
               </Card>
             </div>
@@ -531,11 +531,11 @@ export default function DashboardProjectListPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>Recent Activity</CardTitle>
-                      <CardDescription>Most recent audit events across the platform</CardDescription>
+                      <CardTitle>{t('admin.recentActivity')}</CardTitle>
+                      <CardDescription>{t('admin.recentActivityDesc')}</CardDescription>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/admin/audit-logs')}>
-                      View all <ArrowRight className="ml-1 h-4 w-4" />
+                      {t('admin.viewAll')} <ArrowRight className="ml-1 h-4 w-4" />
                     </Button>
                   </div>
                 </CardHeader>
@@ -573,24 +573,24 @@ export default function DashboardProjectListPage() {
             <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="space-y-2">
                 <p className="text-sm font-medium uppercase tracking-[0.25em] text-muted-foreground">
-                  Your workspace
+                  {t('workspace.title')}
                 </p>
                 <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                  Your Projects
+                  {t('workspace.projects')}
                 </h1>
                 <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
-                  Choose from your existing projects below or create a new one
+                  {t('workspace.subtitle')}
                 </p>
               </div>
 
               <div className="flex gap-2">
                 <Button onClick={() => setModalOpen(true)} variant="outline" className="gap-2">
                   <Building2 className="h-4 w-4" />
-                  See Projects
+                  {t('workspace.seeProjects')}
                 </Button>
                 <Button onClick={() => router.push('/dashboard/new-project')} className="gap-2">
                   <Plus className="h-4 w-4" />
-                  Create Project
+                  {t('workspace.createProject')}
                 </Button>
               </div>
             </div>
@@ -612,15 +612,14 @@ export default function DashboardProjectListPage() {
                 <CardContent className="flex flex-col items-center justify-center gap-4 py-16 text-center">
                   <Building2 className="h-12 w-12 text-muted-foreground/60" />
                   <div className="space-y-2">
-                    <h2 className="text-xl font-semibold">No projects assigned yet</h2>
+                    <h2 className="text-xl font-semibold">{t('workspace.noProjects')}</h2>
                     <p className="max-w-md text-sm text-muted-foreground">
-                      Create your first project to get started, then invite your team and begin tracking
-                      progress.
+                      {t('workspace.noProjectsDesc')}
                     </p>
                   </div>
                   <Button onClick={() => router.push('/dashboard/new-project')} className="gap-2">
                     <Plus className="h-4 w-4" />
-                    Create New Project
+                    {t('workspace.createNewProject')}
                   </Button>
                 </CardContent>
               </Card>
@@ -636,7 +635,7 @@ export default function DashboardProjectListPage() {
                     )
                     const statusClass =
                       statusColors[project.status] ?? 'bg-muted text-muted-foreground'
-                    const roleLabel = roleLabels[project.my_role] ?? 'Team member'
+                    const roleLabel = roleLabels[project.my_role] ?? t('workspace.teamMember')
                     const dueDate = project.planned_end_date
                       ? new Date(project.planned_end_date).toLocaleDateString('en-US', {
                         month: 'short',
@@ -689,7 +688,7 @@ export default function DashboardProjectListPage() {
                             </span>
                             <span className="flex items-center gap-2 text-muted-foreground">
                               <TrendingUp className="h-4 w-4 text-accent" />
-                              {progressPct.toFixed(1)}% complete
+                              {progressPct.toFixed(1)}% {t('workspace.complete')}
                             </span>
                           </div>
 
@@ -705,7 +704,7 @@ export default function DashboardProjectListPage() {
                             className="w-full justify-between"
                             onClick={() => handleOpenProject(project.id)}
                           >
-                            Open Project
+                            {t('workspace.openProject')}
                             <ArrowRight className="h-4 w-4" />
                           </Button>
                         </CardContent>

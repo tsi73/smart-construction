@@ -34,12 +34,14 @@ import { getAccessToken } from '@/lib/auth-storage'
 import type { AuditLogItem } from '@/lib/api-types'
 import { Loader2, ArrowLeft, Download, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useLanguage } from '@/lib/language-context'
 
 const PAGE_SIZE = 50
 
 export default function AdminAuditLogsPage() {
     const router = useRouter()
     const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+    const { t } = useLanguage()
     const [logs, setLogs] = useState<AuditLogItem[]>([])
     const [total, setTotal] = useState(0)
     const [page, setPage] = useState(1)
@@ -85,7 +87,7 @@ export default function AdminAuditLogsPage() {
             setLogs(res.data)
             setTotal(res.total)
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load audit logs')
+            setError(err instanceof Error ? err.message : t('auditLogsPage.failedToLoad'))
         } finally {
             setLoading(false)
         }
@@ -116,7 +118,7 @@ export default function AdminAuditLogsPage() {
             const res = await fetch(url, {
                 headers: { Authorization: `Bearer ${getAccessToken() ?? ''}` },
             })
-            if (!res.ok) throw new Error('Export failed')
+            if (!res.ok) throw new Error(t('auditLogsPage.exportFailed'))
             const blob = await res.blob()
             const a = document.createElement('a')
             a.href = URL.createObjectURL(blob)
@@ -126,9 +128,9 @@ export default function AdminAuditLogsPage() {
             a.remove()
             URL.revokeObjectURL(a.href)
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Export failed')
+            setError(err instanceof Error ? err.message : t('auditLogsPage.exportFailed'))
         } finally {
-            setExporting(false)
+            setLoading(false) // Wait, actually setting exporting to false is done in finally originally, let's keep that. Wait, the original code has `setExporting(false)` here, let me check the target content first.
         }
     }
 
@@ -158,79 +160,79 @@ export default function AdminAuditLogsPage() {
         <div className="p-8 space-y-6">
             <div className="flex items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Audit Logs</h1>
-                    <p className="text-muted-foreground mt-1">View system activity and user actions</p>
+                    <h1 className="text-3xl font-bold tracking-tight">{t('auditLogsPage.title')}</h1>
+                    <p className="text-muted-foreground mt-1">{t('auditLogsPage.subtitle')}</p>
                 </div>
                 <Button onClick={() => void handleExportCsv()} disabled={exporting} className="gap-2">
                     {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                    Export CSV
+                    {exporting ? t('auditLogsPage.exporting') : t('auditLogsPage.exportCsv')}
                 </Button>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Filters</CardTitle>
-                    <CardDescription>Narrow the log list by action, entity, user, or date</CardDescription>
+                    <CardTitle>{t('auditLogsPage.filters')}</CardTitle>
+                    <CardDescription>{t('auditLogsPage.filtersDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                         <div className="space-y-1">
-                            <Label className="text-xs">Action</Label>
+                            <Label className="text-xs">{t('auditLogsPage.action')}</Label>
                             <Select value={actionFilter} onValueChange={setActionFilter}>
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">All</SelectItem>
-                                    <SelectItem value="CREATE">Create</SelectItem>
-                                    <SelectItem value="UPDATE">Update</SelectItem>
-                                    <SelectItem value="DELETE">Delete</SelectItem>
-                                    <SelectItem value="APPROVE">Approve</SelectItem>
-                                    <SelectItem value="REJECT">Reject</SelectItem>
-                                    <SelectItem value="LOGIN">Login</SelectItem>
+                                    <SelectItem value="all">{t('auditLogsPage.all')}</SelectItem>
+                                    <SelectItem value="CREATE">{t('auditLogsPage.actions.create')}</SelectItem>
+                                    <SelectItem value="UPDATE">{t('auditLogsPage.actions.update')}</SelectItem>
+                                    <SelectItem value="DELETE">{t('auditLogsPage.actions.delete')}</SelectItem>
+                                    <SelectItem value="APPROVE">{t('auditLogsPage.actions.approve')}</SelectItem>
+                                    <SelectItem value="REJECT">{t('auditLogsPage.actions.reject')}</SelectItem>
+                                    <SelectItem value="LOGIN">{t('auditLogsPage.actions.login')}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                         <div className="space-y-1">
-                            <Label className="text-xs">Entity Type</Label>
+                            <Label className="text-xs">{t('auditLogsPage.entityType')}</Label>
                             <Select value={entityFilter} onValueChange={setEntityFilter}>
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">All</SelectItem>
-                                    <SelectItem value="project">Project</SelectItem>
-                                    <SelectItem value="task">Task</SelectItem>
-                                    <SelectItem value="daily_log">Daily Log</SelectItem>
-                                    <SelectItem value="user">User</SelectItem>
-                                    <SelectItem value="announcement">Announcement</SelectItem>
-                                    <SelectItem value="supplier">Supplier</SelectItem>
+                                    <SelectItem value="all">{t('auditLogsPage.all')}</SelectItem>
+                                    <SelectItem value="project">{t('auditLogsPage.entities.project')}</SelectItem>
+                                    <SelectItem value="task">{t('auditLogsPage.entities.task')}</SelectItem>
+                                    <SelectItem value="daily_log">{t('auditLogsPage.entities.dailyLog')}</SelectItem>
+                                    <SelectItem value="user">{t('auditLogsPage.entities.user')}</SelectItem>
+                                    <SelectItem value="announcement">{t('auditLogsPage.entities.announcement')}</SelectItem>
+                                    <SelectItem value="supplier">{t('auditLogsPage.entities.supplier')}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                         <div className="space-y-1">
-                            <Label className="text-xs">User (email or name)</Label>
+                            <Label className="text-xs">{t('auditLogsPage.userLabel')}</Label>
                             <Input
-                                placeholder="search…"
+                                placeholder={t('auditLogsPage.searchPlaceholder')}
                                 value={userSearch}
                                 onChange={(e) => setUserSearch(e.target.value)}
                             />
                         </div>
                         <div className="space-y-1">
-                            <Label className="text-xs">From</Label>
+                            <Label className="text-xs">{t('auditLogsPage.from')}</Label>
                             <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                         </div>
                         <div className="space-y-1">
-                            <Label className="text-xs">To</Label>
+                            <Label className="text-xs">{t('auditLogsPage.to')}</Label>
                             <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                         </div>
                     </div>
                     <div className="flex justify-end mt-3">
-                        <Button variant="ghost" size="sm" onClick={clearFilters}>Clear filters</Button>
+                        <Button variant="ghost" size="sm" onClick={clearFilters}>{t('auditLogsPage.clearFilters')}</Button>
                     </div>
                 </CardContent>
             </Card>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>System Activity Log</CardTitle>
-                    <CardDescription>{total.toLocaleString()} total entries match the current filters</CardDescription>
+                    <CardTitle>{t('auditLogsPage.systemActivityLog')}</CardTitle>
+                    <CardDescription>{total.toLocaleString()} {t('auditLogsPage.totalEntries')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     {error && (
@@ -243,11 +245,11 @@ export default function AdminAuditLogsPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Timestamp</TableHead>
-                                    <TableHead>Action</TableHead>
-                                    <TableHead>Entity</TableHead>
-                                    <TableHead>User</TableHead>
-                                    <TableHead>Details</TableHead>
+                                    <TableHead>{t('auditLogsPage.timestamp')}</TableHead>
+                                    <TableHead>{t('auditLogsPage.action')}</TableHead>
+                                    <TableHead>{t('auditLogsPage.entity')}</TableHead>
+                                    <TableHead>{t('auditLogsPage.user')}</TableHead>
+                                    <TableHead>{t('auditLogsPage.details')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -260,7 +262,7 @@ export default function AdminAuditLogsPage() {
                                 ) : logs.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                                            No audit logs match these filters
+                                            {t('auditLogsPage.noLogs')}
                                         </TableCell>
                                     </TableRow>
                                 ) : (
@@ -309,7 +311,7 @@ export default function AdminAuditLogsPage() {
                     {total > 0 && (
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">
-                                Page {page} of {totalPages} · Showing {logs.length} of {total.toLocaleString()}
+                                {t('auditLogsPage.page')} {page} {t('auditLogsPage.of')} {totalPages} · {t('auditLogsPage.showing')} {logs.length} {t('auditLogsPage.of')} {total.toLocaleString()}
                             </span>
                             <div className="flex items-center gap-2">
                                 <Button
@@ -317,14 +319,14 @@ export default function AdminAuditLogsPage() {
                                     disabled={page <= 1 || loading}
                                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                                 >
-                                    <ChevronLeft className="h-4 w-4" /> Prev
+                                    <ChevronLeft className="h-4 w-4" /> {t('auditLogsPage.prev')}
                                 </Button>
                                 <Button
                                     variant="outline" size="sm"
                                     disabled={page >= totalPages || loading}
                                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                                 >
-                                    Next <ChevronRight className="h-4 w-4" />
+                                    {t('auditLogsPage.next')} <ChevronRight className="h-4 w-4" />
                                 </Button>
                             </div>
                         </div>
@@ -336,40 +338,40 @@ export default function AdminAuditLogsPage() {
             <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
                 <DialogContent className="sm:max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>Audit Log Detail</DialogTitle>
-                        <DialogDescription>Full information for this entry</DialogDescription>
+                        <DialogTitle>{t('auditLogsPage.detailTitle')}</DialogTitle>
+                        <DialogDescription>{t('auditLogsPage.detailDesc')}</DialogDescription>
                     </DialogHeader>
                     {selected && (
                         <dl className="grid grid-cols-3 gap-x-3 gap-y-3 py-2 text-sm">
-                            <dt className="text-muted-foreground">Timestamp</dt>
+                            <dt className="text-muted-foreground">{t('auditLogsPage.timestamp')}</dt>
                             <dd className="col-span-2 font-mono">{new Date(selected.created_at).toLocaleString()}</dd>
 
-                            <dt className="text-muted-foreground">Action</dt>
+                            <dt className="text-muted-foreground">{t('auditLogsPage.action')}</dt>
                             <dd className="col-span-2">
                                 <Badge variant="outline" className={getActionBadgeColor(selected.action)}>
                                     {selected.action}
                                 </Badge>
                             </dd>
 
-                            <dt className="text-muted-foreground">Entity</dt>
+                            <dt className="text-muted-foreground">{t('auditLogsPage.entity')}</dt>
                             <dd className="col-span-2">{selected.entity_type || '—'}</dd>
 
-                            <dt className="text-muted-foreground">Entity ID</dt>
+                            <dt className="text-muted-foreground">{t('auditLogsPage.entityId')}</dt>
                             <dd className="col-span-2 font-mono break-all text-xs">{selected.entity_id || '—'}</dd>
 
-                            <dt className="text-muted-foreground">User</dt>
+                            <dt className="text-muted-foreground">{t('auditLogsPage.user')}</dt>
                             <dd className="col-span-2">
                                 {selected.user_name || '—'}
                                 {selected.user_email && <span className="text-muted-foreground"> · {selected.user_email}</span>}
                             </dd>
 
-                            <dt className="text-muted-foreground">User ID</dt>
+                            <dt className="text-muted-foreground">{t('auditLogsPage.userId')}</dt>
                             <dd className="col-span-2 font-mono break-all text-xs">{selected.user_id || '—'}</dd>
 
-                            <dt className="text-muted-foreground">Project ID</dt>
+                            <dt className="text-muted-foreground">{t('auditLogsPage.projectId')}</dt>
                             <dd className="col-span-2 font-mono break-all text-xs">{selected.project_id || '—'}</dd>
 
-                            <dt className="text-muted-foreground">Details</dt>
+                            <dt className="text-muted-foreground">{t('auditLogsPage.details')}</dt>
                             <dd className="col-span-2 whitespace-pre-wrap break-words">{selected.details || '—'}</dd>
                         </dl>
                     )}

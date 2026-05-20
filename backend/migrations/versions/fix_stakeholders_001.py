@@ -19,13 +19,16 @@ depends_on = None
 def upgrade():
     # Check and add columns only if they don't exist
     conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    tables = inspector.get_table_names()
+    has_contractors = 'contractors' in tables
     
     # Add project_id to contractors if not exists
     result = conn.execute(sa.text("""
         SELECT column_name FROM information_schema.columns 
         WHERE table_name='contractors' AND column_name='project_id'
     """))
-    if not result.fetchone():
+    if has_contractors and not result.fetchone():
         op.add_column('contractors', sa.Column('project_id', postgresql.UUID(as_uuid=True), nullable=True))
         op.create_index(op.f('ix_contractors_project_id'), 'contractors', ['project_id'], unique=False)
         op.create_foreign_key('fk_contractors_project_id', 'contractors', 'projects', ['project_id'], ['id'])
@@ -55,7 +58,7 @@ def upgrade():
         SELECT column_name FROM information_schema.columns 
         WHERE table_name='contractors' AND column_name='company_name'
     """))
-    if not result.fetchone():
+    if has_contractors and not result.fetchone():
         op.add_column('contractors', sa.Column('company_name', sa.String(200), nullable=True))
         op.add_column('contractors', sa.Column('tin_number', sa.String(20), nullable=True))
         op.add_column('contractors', sa.Column('license_number', sa.String(100), nullable=True))
