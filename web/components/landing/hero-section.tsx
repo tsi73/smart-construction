@@ -1,8 +1,11 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Building2, ArrowRight } from 'lucide-react'
 import { useLanguage } from '@/lib/language-context'
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1'
 
 interface HeroSectionProps {
   onOpenDashboard: () => void
@@ -11,6 +14,14 @@ interface HeroSectionProps {
 
 export function HeroSection({ onOpenDashboard, isAuthenticated }: HeroSectionProps) {
   const { t } = useLanguage()
+  const [stats, setStats] = useState({ active_projects: 0, team_members: 0 })
+
+  useEffect(() => {
+    fetch(`${API_BASE}/landing/stats`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setStats(data) })
+      .catch(() => {})
+  }, [])
 
   return (
     <section className="relative bg-primary text-primary-foreground">
@@ -59,17 +70,13 @@ export function HeroSection({ onOpenDashboard, isAuthenticated }: HeroSectionPro
             </div>
             
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-8 pt-8 border-t border-primary-foreground/20">
+            <div className="grid grid-cols-2 gap-8 pt-8 border-t border-primary-foreground/20">
               <div>
-                <div className="text-3xl font-bold">150+</div>
+                <div className="text-3xl font-bold">{stats.active_projects}+</div>
                 <div className="text-sm text-primary-foreground/70">{t('hero.activeProjects')}</div>
               </div>
               <div>
-                <div className="text-3xl font-bold">98%</div>
-                <div className="text-sm text-primary-foreground/70">{t('hero.onTimeDelivery')}</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold">500+</div>
+                <div className="text-3xl font-bold">{stats.team_members}+</div>
                 <div className="text-sm text-primary-foreground/70">{t('hero.teamMembers')}</div>
               </div>
             </div>
