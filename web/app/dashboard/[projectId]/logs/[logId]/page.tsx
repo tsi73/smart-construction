@@ -225,15 +225,15 @@ export default function LogDetailPage({ params }: LogDetailPageProps) {
         const hw = Number(formData.hours_worked) || 0
         const hr = Number(formData.hourly_rate) || 0
         const oh = Number(formData.overtime_hours) || 0
-        const or_ = Number(formData.overtime_rate) || (hr * 1.5)
-        const totalCost = (wc * hw * hr) + (wc * oh * or_)
+        const otMultiplier = Number(formData.overtime_rate) || 1.5
+        const totalCost = (wc * hw * hr) + (wc * oh * hr * otMultiplier)
         await addLogManpower(logId, {
           worker_type: formData.worker_type || 'general',
           number_of_workers: wc,
           hours_worked: hw,
           overtime_hours: oh,
           hourly_rate: hr,
-          overtime_rate: or_,
+          overtime_rate: hr * otMultiplier,
           cost: totalCost,
         })
       } else if (addType === 'material') {
@@ -975,12 +975,12 @@ export default function LogDetailPage({ params }: LogDetailPageProps) {
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Overtime Rate (ETB/hr, default 1.5×)</Label>
-                  <Input type="number" min={0} step={0.01} placeholder="Optional" value={formData.overtime_rate ?? ''} onChange={(e) => setFormData(p => ({ ...p, overtime_rate: e.target.value }))} />
+                  <Label>Overtime Multiplier (default 1.5×)</Label>
+                  <Input type="number" min={1} step={0.1} placeholder="1.5" value={formData.overtime_rate ?? ''} onChange={(e) => setFormData(p => ({ ...p, overtime_rate: e.target.value }))} />
                 </div>
                 {formData.worker_type && formData.hourly_rate && (
                   <p className="text-right text-sm font-medium">
-                    Total: ETB {(((Number(formData.worker_count) || 1) * (Number(formData.hours_worked) || 0) * (Number(formData.hourly_rate) || 0)) + ((Number(formData.worker_count) || 1) * (Number(formData.overtime_hours) || 0) * ((Number(formData.overtime_rate)) || (Number(formData.hourly_rate) * 1.5)))).toLocaleString()}
+                    Total: ETB {(((Number(formData.worker_count) || 1) * (Number(formData.hours_worked) || 0) * (Number(formData.hourly_rate) || 0)) + ((Number(formData.worker_count) || 1) * (Number(formData.overtime_hours) || 0) * (Number(formData.hourly_rate) || 0) * (Number(formData.overtime_rate) || 1.5))).toLocaleString()}
                   </p>
                 )}
               </>
