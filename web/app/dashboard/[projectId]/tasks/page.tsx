@@ -244,7 +244,15 @@ export default function TasksPage({ params }: TasksPageProps) {
 
   const filteredTasks = useMemo(() => {
     return [...projectTasks]
-      .reverse() // newest first (backend returns in insertion order)
+      .sort((a, b) => {
+        // Completed tasks go to bottom
+        if (a.status === 'completed' && b.status !== 'completed') return 1
+        if (a.status !== 'completed' && b.status === 'completed') return -1
+        // Among non-completed: oldest start_date first (urgent to execute)
+        const da = a.start_date ? new Date(a.start_date).getTime() : Infinity
+        const db = b.start_date ? new Date(b.start_date).getTime() : Infinity
+        return da - db
+      })
       .filter((task) => {
         if (statusFilter !== 'all' && task.status !== statusFilter) return false
         if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase())) return false

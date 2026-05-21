@@ -16,6 +16,7 @@ import {
     Sun,
     CloudDrizzle,
 } from 'lucide-react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import type { WeatherResponse } from '@/lib/api-types'
 
 interface WeatherForecastCardProps {
@@ -123,6 +124,30 @@ export function WeatherForecastCard({ weather, projectLocation }: WeatherForecas
                         )}
                     </div>
                 </div>
+
+                {/* Temperature Line Chart */}
+                {expanded && hasForecast && (
+                    <div className="h-48 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart
+                                data={displayForecast.map((day, i) => ({
+                                    name: i === 0 ? 'Today' : i === 1 ? 'Tmrw' : new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }),
+                                    max: day.temperature_max,
+                                    min: day.temperature_min,
+                                }))}
+                                margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                                <YAxis tick={{ fontSize: 11 }} unit="°" />
+                                <Tooltip formatter={(v: number) => `${v.toFixed(1)}°C`} />
+                                <Legend wrapperStyle={{ fontSize: 11 }} />
+                                <Line type="monotone" dataKey="max" stroke="#f97316" strokeWidth={2} dot={{ r: 3 }} name="High" />
+                                <Line type="monotone" dataKey="min" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} name="Low" />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                )}
 
                 {/* 7-Day Forecast */}
                 {expanded && hasForecast && (
