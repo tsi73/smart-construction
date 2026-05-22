@@ -901,85 +901,55 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                 )
               })()}
 
-              {/* Material Burn Rate — stacked bar: consumed vs remaining + runway comparison */}
+              {/* Material Usage Trend — line chart of daily material+equipment cost */}
               {(() => {
                 const m = analytics.material_burn_rate
-                const tone = statusTone(m.status)
+                const tone: AnalyticsTone =
+                  m.trend === 'increasing' ? 'critical' :
+                    m.trend === 'decreasing' ? 'good' : 'neutral'
                 const t = toneStyles[tone]
-                const allocated = Math.max(m.total_allocated, 1)
-                const consumedPct = Math.min(100, (m.total_consumed / allocated) * 100)
-                const data = [
-                  {
-                    name: 'Budget',
-                    consumed: m.total_consumed,
-                    remaining: Math.max(0, m.total_allocated - m.total_consumed),
-                  },
-                ]
+                const TrendIcon = m.trend === 'increasing' ? TrendingUp : TrendingDown
+                const trendColor = tone === 'critical' ? '#ef4444' : tone === 'good' ? '#10b981' : '#64748b'
+                // most-recent first from backend → reverse for left-to-right time axis
+                const data = [...m.data_points].reverse().map((p, i) => ({
+                  idx: i + 1,
+                  label: p.date ? new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : `#${i + 1}`,
+                  cost: p.daily_cost,
+                }))
                 return (
                   <Card className={`shadow-sm border ${t.card}`}>
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Package className="h-4 w-4 text-muted-foreground" />
-                          <CardTitle className="text-sm font-semibold">Material & Equipment Spend</CardTitle>
+                          <CardTitle className="text-sm font-semibold">Material Usage Trend</CardTitle>
                         </div>
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${t.badge}`}>
-                          {m.status.replace('_', ' ')}
+                          {m.trend.replace('_', ' ')}
                         </span>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      <ChartContainer
-                        config={{ consumed: { label: 'Consumed', color: '#f59e0b' }, remaining: { label: 'Remaining', color: '#e5e7eb' } }}
-                        className="h-12 w-full"
-                      >
-                        <BarChart data={data} layout="vertical" margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
-                          <XAxis type="number" hide />
-                          <YAxis type="category" dataKey="name" hide />
-                          <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-                          <Bar dataKey="consumed" stackId="b" fill="#f59e0b" radius={[6, 0, 0, 6]} />
-                          <Bar dataKey="remaining" stackId="b" fill="#e5e7eb" radius={[0, 6, 6, 0]} />
-                        </BarChart>
-                      </ChartContainer>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{formatBudget(m.total_consumed)} spent ({consumedPct.toFixed(0)}%)</span>
-                        <span>{formatBudget(m.total_allocated)} total budget</span>
-                      </div>
-
-                      <div className="mt-1 space-y-1">
-                        <p className="text-xs font-medium text-foreground">
-                          {formatBudget(m.burn_rate_per_day)}<span className="font-normal text-muted-foreground">/working day</span>
-                        </p>
-                        {m.days_until_exhaustion !== null && m.days_remaining_in_project > 0 && (() => {
-                          const max = Math.max(m.days_until_exhaustion, m.days_remaining_in_project, 1)
-                          const exhaustPct = (m.days_until_exhaustion / max) * 100
-                          const projectPct = (m.days_remaining_in_project / max) * 100
-                          const tight = m.days_until_exhaustion < m.days_remaining_in_project
-                          return (
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                <span className="inline-block h-2 w-2 rounded-full bg-amber-500" />
-                                Budget runs out: {m.days_until_exhaustion}d
-                              </div>
-                              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                                <div className="h-full rounded-full bg-amber-500" style={{ width: `${exhaustPct}%` }} />
-                              </div>
-                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
-                                Project ends: {m.days_remaining_in_project}d
-                              </div>
-                              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${projectPct}%` }} />
-                              </div>
-                              {tight && (
-                                <p className="text-[10px] font-medium text-red-600">
-                                  Runs out {m.days_remaining_in_project - m.days_until_exhaustion}d before project ends
-                                </p>
-                              )}
-                            </div>
-                          )
-                        })()}
-                      </div>
+                      {data.length > 0 ? (
+                        <ChartContainer
+                          config={{ cost: { label: 'ETB/day', color: trendColor } }}
+                          className="h-36 w-full"
+                        >
+                          <LineChart data={data} margin={{ left: 8, right: 12, top: 8, bottom: 4 }}>
+                            <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                            <XAxis dataKey="label" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={28} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v} />
+                            <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+                            <Line type="monotone" dataKey="cost" stroke={trendColor} strokeWidth={2} dot={{ r: 3 }} />
+                          </LineChart>
+                        </ChartContainer>
+                      ) : (
+                        <div className="flex h-36 items-center justify-center text-xs text-muted-foreground">No material or equipment data</div>
+                      )}
+                      <p className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                        Avg <span className={`font-semibold ${t.valueText}`}>{formatBudget(m.burn_rate_per_day)}</span>/day
+                        {m.trend !== 'insufficient_data' && <TrendIcon className="h-3.5 w-3.5" />}
+                      </p>
                     </CardContent>
                   </Card>
                 )
