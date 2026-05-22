@@ -185,7 +185,7 @@ export default function CreateLogPage({ params }: CreateLogPageProps) {
     }
 
     const calculateEquipmentTotal = (entry: EquipmentEntry) => {
-        const quantity = Number(entry.quantity) || 0
+        const quantity = Number(entry.quantity) || 1
         const operationTime = Number(entry.operation_time) || 0
         const costPerUnit = Number(entry.cost_per_unit) || 0
         return quantity * operationTime * costPerUnit
@@ -289,6 +289,12 @@ export default function CreateLogPage({ params }: CreateLogPageProps) {
         const hasMaterial = materials.some(m => m.material_type.trim() && m.quantity && m.unit_cost)
         const hasEquipment = equipment.some(e => e.type.trim() && e.operation_time && e.cost_per_unit)
 
+        // Warn if any equipment entry is partially filled (type given but missing hours or cost)
+        const incompleteEquipment = equipment.some(e => e.type.trim() && (!e.operation_time || !e.cost_per_unit))
+        if (incompleteEquipment) {
+            toast.error(t('dailyLogPage.equipmentIncomplete') || 'Some equipment entries are missing operation time or cost per unit')
+            return
+        }
 
         setCreating(true)
         try {
