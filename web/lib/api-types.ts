@@ -592,13 +592,10 @@ export interface LaborProductivity {
 }
 
 export interface MaterialBurnRate {
-  total_consumed: number
-  total_allocated: number
   burn_rate_per_day: number
-  days_until_exhaustion: number | null
-  days_remaining_in_project: number
-  status: 'healthy' | 'warning' | 'critical' | 'unknown' | 'no_data'
-  message: string
+  trend: 'increasing' | 'stable' | 'decreasing' | 'insufficient_data'
+  data_points: Array<{ date: string | null; daily_cost: number }>
+  status: string
 }
 
 export interface RiskBoundary {

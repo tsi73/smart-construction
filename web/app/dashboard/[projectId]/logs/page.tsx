@@ -43,7 +43,7 @@ import {
 } from 'lucide-react'
 import type { LogListItem, TaskListItem } from '@/lib/api-types'
 import type { LogStatus } from '@/lib/domain'
-import { listProjectLogs, listProjectTasks, createDailyLog, getWeather } from '@/lib/api'
+import { listProjectLogs, listProjectTasks, createDailyLog, getWeather, listTaskDependencies } from '@/lib/api'
 import { useProjectRole } from '@/lib/project-role-context'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
@@ -74,7 +74,7 @@ export default function LogsPage({ params }: LogsPageProps) {
 
   // Create log dialog state
   const [createOpen, setCreateOpen] = useState(false)
-  const [tasks, setTasks] = useState<TaskListItem[]>([])
+  const [tasks, setTasks] = useState<(TaskListItem & { blocked_by?: string })[]>([])
   const [selectedTaskId, setSelectedTaskId] = useState('')
   const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0])
   const [logNotes, setLogNotes] = useState('')
@@ -121,14 +121,16 @@ export default function LogsPage({ params }: LogsPageProps) {
   }, [projectLogs, userRole])
 
   const filteredLogs = useMemo(() => {
-    return visibleLogs.filter((log) => {
-      if (statusFilter !== 'all' && log.status !== statusFilter) return false
-      if (searchQuery) {
-        const notes = log.notes || ''
-        if (!notes.toLowerCase().includes(searchQuery.toLowerCase())) return false
-      }
-      return true
-    })
+    return [...visibleLogs]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .filter((log) => {
+        if (statusFilter !== 'all' && log.status !== statusFilter) return false
+        if (searchQuery) {
+          const notes = log.notes || ''
+          if (!notes.toLowerCase().includes(searchQuery.toLowerCase())) return false
+        }
+        return true
+      })
   }, [visibleLogs, searchQuery, statusFilter])
 
   // Status filter buttons per role
@@ -177,7 +179,28 @@ export default function LogsPage({ params }: LogsPageProps) {
         limit: 100,
         assigned_to: user?.id,
       })
-      setTasks(res.data.filter(t => t.status !== 'completed'))
+      const activeTasks = res.data.filter(t => t.status !== 'completed')
+      // Check dependencies for each task
+      const tasksWithDeps = await Promise.all(
+        activeTasks.map(async (t) => {
+          try {
+            const deps = await listTaskDependencies(t.id)
+            const blockers = deps.filter(d => {
+              const pred = res.data.find(task => task.id === d.depends_on_task_id)
+              return pred && pred.status !== 'completed'
+            })
+            if (blockers.length > 0) {
+              const blockerNames = blockers.map(b => {
+                const pred = res.data.find(task => task.id === b.depends_on_task_id)
+                return pred?.title || 'Unknown task'
+              }).join(', ')
+              return { ...t, blocked_by: blockerNames }
+            }
+          } catch { /* ignore */ }
+          return { ...t, blocked_by: undefined }
+        })
+      )
+      setTasks(tasksWithDeps)
     } catch {
       setTasks([])
     }
@@ -500,9 +523,13 @@ export default function LogsPage({ params }: LogsPageProps) {
                   {tasks.length === 0 && (
                     <SelectItem value="_none" disabled>No tasks assigned to you</SelectItem>
                   )}
+                  {tasks.filter(t => !t.blocked_by).length === 0 && tasks.length > 0 && (
+                    <SelectItem value="_blocked" disabled>All tasks are blocked by dependencies</SelectItem>
+                  )}
                   {tasks.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
+                    <SelectItem key={t.id} value={t.id} disabled={!!t.blocked_by}>
                       {t.title} — {t.status.replace('_', ' ')}
+                      {t.blocked_by && ` (Blocked by: ${t.blocked_by})`}
                     </SelectItem>
                   ))}
                 </SelectContent>

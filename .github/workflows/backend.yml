@@ -3,29 +3,37 @@ name: Backend CI/CD
 on:
   workflow_dispatch:
   push:
-    branches: ["main", "develop"]
+    branches: ["main"]
     paths:
-      - "backend/api/**"
-      - ".github/workflows/backend.yml"
-  pull_request:
-    branches: ["main", "develop"]
-    paths:
-      - "backend/api/**"
+      - "backend/**"
       - ".github/workflows/backend.yml"
 
 permissions:
   contents: read
 
 concurrency:
-  group: backend-${{ github.workflow }}-${{ github.ref }}
+  group: backend-deploy-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  ci:
-    name: Backend CI Skeleton
+  deploy:
+    name: Deploy Backend to EC2
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Placeholder
-        run: echo "Backend workflow scaffold only. No implementation commands configured."
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/foresite
+            git pull origin main
+            cd backend
+            docker compose build --no-cache backend
+            docker compose up -d backend
+            docker image prune -f
+            echo "Backend deployed at $(date)"

@@ -48,7 +48,7 @@ import type { LogStatus } from '@/lib/domain'
 import { useProjectRole } from '@/lib/project-role-context'
 import { getApiBaseUrl } from '@/lib/api-client'
 import { getAccessToken } from '@/lib/auth-storage'
-import { ArrowLeft, CheckCircle2, Clock3, FileText, Loader2, MapPin, Pencil, Plus, Users, XCircle, Image as ImageIcon, Trash2, Upload, ListChecks, AlertCircle } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Clock3, FileText, Loader2, Pencil, Plus, Users, XCircle, Image as ImageIcon, Trash2, Upload, ListChecks, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface LogDetailPageProps {
@@ -225,15 +225,15 @@ export default function LogDetailPage({ params }: LogDetailPageProps) {
         const hw = Number(formData.hours_worked) || 0
         const hr = Number(formData.hourly_rate) || 0
         const oh = Number(formData.overtime_hours) || 0
-        const or_ = Number(formData.overtime_rate) || (hr * 1.5)
-        const totalCost = (wc * hw * hr) + (wc * oh * or_)
+        const otMultiplier = Number(formData.overtime_rate) || 1.5
+        const totalCost = (wc * hw * hr) + (wc * oh * hr * otMultiplier)
         await addLogManpower(logId, {
           worker_type: formData.worker_type || 'general',
           number_of_workers: wc,
           hours_worked: hw,
           overtime_hours: oh,
           hourly_rate: hr,
-          overtime_rate: or_,
+          overtime_rate: hr * otMultiplier,
           cost: totalCost,
         })
       } else if (addType === 'material') {
@@ -253,16 +253,19 @@ export default function LogDetailPage({ params }: LogDetailPageProps) {
           delivery_date: formData.delivery_date || undefined,
         })
       } else if (addType === 'equipment') {
+        const qty = Number(formData.quantity) || 1
         const unitCost = Number(formData.unit_cost) || 0
         const hoursUsed = Number(formData.hours_used) || 0
+        const idleHours = Number(formData.idle_hours) || 0
+        const totalCost = qty * (hoursUsed + idleHours) * unitCost
         await addLogEquipment(logId, {
           name: formData.name || '',
-          quantity: Number(formData.quantity) || 1,
+          quantity: qty,
           start_date: formData.start_date || undefined,
           hours_used: hoursUsed,
           unit_cost: unitCost,
-          cost: formData.unit_cost ? hoursUsed * unitCost : Number(formData.cost) || 0,
-          idle_hours: Number(formData.idle_hours) || 0,
+          cost: totalCost,
+          idle_hours: idleHours,
           idle_reason: formData.idle_reason || undefined,
         })
       } else if (addType === 'equipment_idle' && selectedEquipmentForIdle) {
@@ -972,12 +975,12 @@ export default function LogDetailPage({ params }: LogDetailPageProps) {
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Overtime Rate (ETB/hr, default 1.5×)</Label>
-                  <Input type="number" min={0} step={0.01} placeholder="Optional" value={formData.overtime_rate ?? ''} onChange={(e) => setFormData(p => ({ ...p, overtime_rate: e.target.value }))} />
+                  <Label>Overtime Multiplier (default 1.5×)</Label>
+                  <Input type="number" min={1} step={0.1} placeholder="1.5" value={formData.overtime_rate ?? ''} onChange={(e) => setFormData(p => ({ ...p, overtime_rate: e.target.value }))} />
                 </div>
                 {formData.worker_type && formData.hourly_rate && (
                   <p className="text-right text-sm font-medium">
-                    Total: ETB {(((Number(formData.worker_count) || 1) * (Number(formData.hours_worked) || 0) * (Number(formData.hourly_rate) || 0)) + ((Number(formData.worker_count) || 1) * (Number(formData.overtime_hours) || 0) * ((Number(formData.overtime_rate)) || (Number(formData.hourly_rate) * 1.5)))).toLocaleString()}
+                    Total: ETB {(((Number(formData.worker_count) || 1) * (Number(formData.hours_worked) || 0) * (Number(formData.hourly_rate) || 0)) + ((Number(formData.worker_count) || 1) * (Number(formData.overtime_hours) || 0) * (Number(formData.hourly_rate) || 0) * (Number(formData.overtime_rate) || 1.5))).toLocaleString()}
                   </p>
                 )}
               </>
@@ -1028,16 +1031,38 @@ export default function LogDetailPage({ params }: LogDetailPageProps) {
                   <Label>Equipment Name *</Label>
                   <Input placeholder="e.g. Excavator, Compactor, Crane" value={formData.name ?? ''} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1.5">
+                    <Label>Quantity</Label>
+                    <Input type="number" min={1} placeholder="1" value={formData.quantity ?? '1'} onChange={(e) => setFormData(p => ({ ...p, quantity: e.target.value }))} />
+                  </div>
                   <div className="space-y-1.5">
                     <Label>Hours Used *</Label>
                     <Input type="number" min={0} step={0.5} placeholder="5" value={formData.hours_used ?? ''} onChange={(e) => setFormData(p => ({ ...p, hours_used: e.target.value }))} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Cost (ETB) *</Label>
-                    <Input type="number" min={0} placeholder="7500" value={formData.cost ?? ''} onChange={(e) => setFormData(p => ({ ...p, cost: e.target.value }))} />
+                    <Label>Rate (ETB/hr) *</Label>
+                    <Input type="number" min={0} step={0.01} placeholder="1500" value={formData.unit_cost ?? ''} onChange={(e) => setFormData(p => ({ ...p, unit_cost: e.target.value }))} />
                   </div>
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Idle Hours</Label>
+                    <Input type="number" min={0} step={0.5} placeholder="0" value={formData.idle_hours ?? '0'} onChange={(e) => setFormData(p => ({ ...p, idle_hours: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Idle Reason</Label>
+                    <Input placeholder="e.g. Breakdown, Weather" value={formData.idle_reason ?? ''} onChange={(e) => setFormData(p => ({ ...p, idle_reason: e.target.value }))} />
+                  </div>
+                </div>
+                {formData.hours_used && formData.unit_cost && (
+                  <p className="text-right text-sm font-medium">
+                    Total: ETB {((Number(formData.quantity) || 1) * ((Number(formData.hours_used) || 0) + (Number(formData.idle_hours) || 0)) * (Number(formData.unit_cost) || 0)).toLocaleString()}
+                    <span className="text-xs text-muted-foreground ml-2">
+                      ({formData.quantity || 1} × ({formData.hours_used}h + {formData.idle_hours || 0}h idle) × ETB {formData.unit_cost}/hr)
+                    </span>
+                  </p>
+                )}
               </>
             )}
             {addType === 'equipment_idle' && (

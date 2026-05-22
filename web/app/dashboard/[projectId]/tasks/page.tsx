@@ -95,6 +95,7 @@ export default function TasksPage({ params }: TasksPageProps) {
   const [newTaskStart, setNewTaskStart] = useState(today)
   const [newTaskDuration, setNewTaskDuration] = useState('7')
   const [newTaskWeight, setNewTaskWeight] = useState('1.0')
+  const [newTaskBudget, setNewTaskBudget] = useState('')
   const [newTaskAssignee, setNewTaskAssignee] = useState<string | null>(null)
   const [newTaskDependsOn, setNewTaskDependsOn] = useState<string | null>(null)
   const [assigneePopoverOpen, setAssigneePopoverOpen] = useState(false)
@@ -204,6 +205,7 @@ export default function TasksPage({ params }: TasksPageProps) {
         start_date: newTaskStart ? `${newTaskStart}T00:00:00` : undefined,
         duration_days: Number(newTaskDuration) || 7,
         weight: Number(newTaskWeight),
+        allocated_budget: newTaskBudget ? Number(newTaskBudget) : undefined,
         assigned_to: newTaskAssignee || undefined,
         depends_on_task_id: newTaskDependsOn || undefined,
       })
@@ -228,6 +230,7 @@ export default function TasksPage({ params }: TasksPageProps) {
       setNewTaskStart(today)
       setNewTaskDuration('7')
       setNewTaskWeight('1.0')
+      setNewTaskBudget('')
       setNewTaskAssignee(null)
       setNewTaskDependsOn(null)
       setNewTaskActivities([{ name: '', percentage: '' }])
@@ -244,7 +247,15 @@ export default function TasksPage({ params }: TasksPageProps) {
 
   const filteredTasks = useMemo(() => {
     return [...projectTasks]
-      .reverse() // newest first (backend returns in insertion order)
+      .sort((a, b) => {
+        // Completed tasks go to bottom
+        if (a.status === 'completed' && b.status !== 'completed') return 1
+        if (a.status !== 'completed' && b.status === 'completed') return -1
+        // Among non-completed: oldest start_date first (urgent to execute)
+        const da = a.start_date ? new Date(a.start_date).getTime() : Infinity
+        const db = b.start_date ? new Date(b.start_date).getTime() : Infinity
+        return da - db
+      })
       .filter((task) => {
         if (statusFilter !== 'all' && task.status !== statusFilter) return false
         if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase())) return false
@@ -288,7 +299,7 @@ export default function TasksPage({ params }: TasksPageProps) {
   }
 
   return (
-    <div className="space-y-5 px-6">
+    <div className="space-y-5 pb-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">{t('tasksPage.title')}</h1>
@@ -377,6 +388,20 @@ export default function TasksPage({ params }: TasksPageProps) {
                       onChange={(e) => setNewTaskDuration(e.target.value)}
                     />
                   </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium" htmlFor="task-budget">Allocated Budget (ETB)</label>
+                  <Input
+                    id="task-budget"
+                    type="number"
+                    min={0}
+                    step={1000}
+                    placeholder="e.g. 500000"
+                    value={newTaskBudget}
+                    onChange={(e) => setNewTaskBudget(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">Optional — budget allocated for this task</p>
                 </div>
 
                 <div className="grid gap-2">

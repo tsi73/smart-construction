@@ -3,6 +3,7 @@ Advanced analytics derived from ML prediction parameters and project data.
 Implements all 12 analytics metrics requested by the user.
 """
 import logging
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import TypedDict
 from uuid import UUID
@@ -57,13 +58,10 @@ class LaborProductivityTrend(TypedDict):
 
 
 class MaterialBurnRate(TypedDict):
-    total_consumed: float
-    total_allocated: float
     burn_rate_per_day: float
-    days_until_exhaustion: int | None
-    days_remaining_in_project: int
-    status: str
-    message: str
+    trend: str  # "increasing" | "stable" | "decreasing" | "insufficient_data"
+    data_points: list[dict]  # [{date, daily_cost}] most-recent first
+    status: str  # mirrors trend for badge colour
 
 
 class RiskBoundaryDistance(TypedDict):
@@ -326,75 +324,70 @@ async def compute_labor_productivity_trend(db: AsyncSession, project_id: UUID, l
 
 async def compute_material_burn_rate(db: AsyncSession, project: Project, project_id: UUID) -> MaterialBurnRate:
     """
-    Material cost consumed vs allocated, with days until exhaustion.
+    Daily material + equipment cost per working day, last 10 logs.
+    No budget comparison — shows actual usage trend like labor productivity.
     """
-    logs_res = await db.execute(select(DailyLog).where(DailyLog.project_id == project_id))
-    log_ids = [l.id for l in logs_res.scalars().all()]
+    logs_res = await db.execute(
+        select(DailyLog)
+        .where(DailyLog.project_id == project_id)
+        .order_by(DailyLog.date.desc())
+        .limit(10)
+    )
+    logs = list(logs_res.scalars().all())
+    log_ids = [l.id for l in logs]
 
     if not log_ids:
         return {
-            "total_consumed": 0.0,
-            "total_allocated": 0.0,
             "burn_rate_per_day": 0.0,
-            "days_until_exhaustion": None,
-            "days_remaining_in_project": 0,
+            "trend": "insufficient_data",
+            "data_points": [],
             "status": "no_data",
-            "message": "No material data available",
         }
 
     materials_res = await db.execute(select(Material).where(Material.log_id.in_(log_ids)))
     materials = list(materials_res.scalars().all())
+    equipment_res = await db.execute(select(Equipment).where(Equipment.log_id.in_(log_ids)))
+    equipment = list(equipment_res.scalars().all())
 
-    total_consumed = sum(float(m.cost or 0.0) for m in materials)
-    
-    # Estimate material allocation as 40% of total budget
-    total_allocated = float(project.total_budget or 0.0) * 0.4
+    # Aggregate costs per log date
+    log_date_map = {l.id: (l.date.date() if hasattr(l.date, 'date') else l.date) for l in logs}
+    date_costs: dict = defaultdict(float)
+    for m in materials:
+        d = log_date_map.get(m.log_id)
+        if d:
+            date_costs[d] += float(m.cost or 0.0)
+    for e in equipment:
+        d = log_date_map.get(e.log_id)
+        if d:
+            date_costs[d] += float(e.cost or 0.0)
 
-    # Calculate burn rate (cost per day)
-    if project.planned_start_date:
-        start = project.planned_start_date.replace(tzinfo=timezone.utc) if not project.planned_start_date.tzinfo else project.planned_start_date
-        days_elapsed = max(1, (datetime.now(timezone.utc) - start).days)
-        burn_rate_per_day = total_consumed / days_elapsed
-    else:
-        burn_rate_per_day = 0.0
+    # Build data points sorted most-recent first (mirrors labor productivity)
+    data_points = sorted(
+        [{"date": str(d), "daily_cost": round(cost, 2)} for d, cost in date_costs.items()],
+        key=lambda x: x["date"],
+        reverse=True,
+    )
 
-    # Days until exhaustion
-    remaining_budget = total_allocated - total_consumed
-    if burn_rate_per_day > 0 and remaining_budget > 0:
-        days_until_exhaustion = int(remaining_budget / burn_rate_per_day)
-    else:
-        days_until_exhaustion = None
+    burn_rate_per_day = sum(p["daily_cost"] for p in data_points) / len(data_points) if data_points else 0.0
 
-    # Days remaining in project
-    if project.planned_end_date:
-        end = project.planned_end_date.replace(tzinfo=timezone.utc) if not project.planned_end_date.tzinfo else project.planned_end_date
-        days_remaining_in_project = max(0, (end - datetime.now(timezone.utc)).days)
-    else:
-        days_remaining_in_project = 0
-
-    # Status
-    if days_until_exhaustion and days_remaining_in_project > 0:
-        if days_until_exhaustion < days_remaining_in_project:
-            status = "critical"
-            message = f"Material budget will run out {days_remaining_in_project - days_until_exhaustion} days before project completion"
-        elif days_until_exhaustion < days_remaining_in_project * 1.2:
-            status = "warning"
-            message = "Material budget is tight"
+    # Trend: compare 3 most-recent vs 3 oldest data points
+    if len(data_points) >= 3:
+        recent_avg = sum(p["daily_cost"] for p in data_points[:3]) / 3
+        older_avg = sum(p["daily_cost"] for p in data_points[-3:]) / 3
+        if recent_avg > older_avg * 1.1:
+            trend = "increasing"
+        elif recent_avg < older_avg * 0.9:
+            trend = "decreasing"
         else:
-            status = "healthy"
-            message = "Material budget is adequate"
+            trend = "stable"
     else:
-        status = "unknown"
-        message = "Insufficient data for projection"
+        trend = "insufficient_data"
 
     return {
-        "total_consumed": round(total_consumed, 2),
-        "total_allocated": round(total_allocated, 2),
         "burn_rate_per_day": round(burn_rate_per_day, 2),
-        "days_until_exhaustion": days_until_exhaustion,
-        "days_remaining_in_project": days_remaining_in_project,
-        "status": status,
-        "message": message,
+        "trend": trend,
+        "data_points": data_points,
+        "status": trend,
     }
 
 

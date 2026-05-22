@@ -101,6 +101,10 @@ async def lifespan(app: FastAPI):
         await conn.execute(text(
             "ALTER TABLE projects ADD COLUMN IF NOT EXISTS budget_alert_threshold_pct_override FLOAT"
         ))
+        # Ensure progress_reported column has a default (added by a prior commit; safe to run if column already exists)
+        await conn.execute(text(
+            "ALTER TABLE daily_log_activities ADD COLUMN IF NOT EXISTS progress_reported FLOAT DEFAULT 100.0"
+        ))
     load_ml_artifacts()
     yield
 

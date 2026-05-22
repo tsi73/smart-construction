@@ -181,7 +181,7 @@ export default function EditLogPage({ params }: EditLogPageProps) {
         return (wc * hw * hr) + (wc * oh * or_)
     }
     const calcMatCost = () => (Number(matForm.quantity) || 0) * (Number(matForm.unit_cost) || 0)
-    const calcEqCost = () => (Number(eqForm.operation_time) || 0) * (Number(eqForm.cost_per_unit) || 0)
+    const calcEqCost = () => (Number(eqForm.quantity) || 1) * ((Number(eqForm.operation_time) || 0) + (Number(eqForm.idle_hours) || 0)) * (Number(eqForm.cost_per_unit) || 0)
 
     const handleAddEntry = async () => {
         if (!addType) return
@@ -329,12 +329,13 @@ export default function EditLogPage({ params }: EditLogPageProps) {
                 const qty = Number(editEqForm.quantity) || 1
                 const ot = Number(editEqForm.operation_time) || 0
                 const cpu = Number(editEqForm.cost_per_unit) || 0
+                const idleH = Number(editEqForm.idle_hours) || 0
                 const startDate = editEqForm.start_time ? `${new Date().toISOString().split('T')[0]}T${editEqForm.start_time}:00Z` : undefined
                 await updateLogEquipment(editDialog.id, {
                     name: editEqForm.type.trim(), quantity: qty,
                     start_date: startDate, hours_used: ot,
-                    unit_cost: cpu, cost: ot * cpu,
-                    idle_hours: Number(editEqForm.idle_hours) || 0,
+                    unit_cost: cpu, cost: qty * (ot + idleH) * cpu,
+                    idle_hours: idleH,
                     idle_reason: editEqForm.idle_reason.trim() || undefined,
                 })
             }
@@ -793,7 +794,7 @@ export default function EditLogPage({ params }: EditLogPageProps) {
                                     <div className="space-y-1.5"><Label>Idle Reason</Label><Input placeholder="Reason for idle" value={eqForm.idle_reason} onChange={(e) => setEqForm(p => ({ ...p, idle_reason: e.target.value }))} /></div>
                                 </div>
                                 {eqForm.operation_time && eqForm.cost_per_unit && (
-                                    <p className="text-right text-sm font-medium">Total: ETB {calcEqCost().toLocaleString()}</p>
+                                    <p className="text-right text-sm font-medium">Total: ETB {calcEqCost().toLocaleString()} <span className="text-xs text-muted-foreground">({eqForm.quantity || 1} × ({eqForm.operation_time}h + {eqForm.idle_hours || 0}h idle) × {eqForm.cost_per_unit}/hr)</span></p>
                                 )}
                             </>
                         )}
