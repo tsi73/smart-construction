@@ -1,0 +1,357 @@
+{
+  "@@locale": "am",
+  "appTitle": "ኮንስትራክት ፕሮ",
+  "loading": "በመጫን ላይ",
+  "retry": "እንደገና ሞክር",
+  "cancel": "ሰርዝ",
+  "save": "አስቀምጥ",
+  "submit": "አስገባ",
+  "delete": "ሰርዝ",
+  "edit": "አስተካክል",
+  "update": "አዘምን",
+  "approve": "አጽድቅ",
+  "reject": "ውድቅ አድርግ",
+  "search": "ፈልግ",
+  "filter": "አጣራ",
+  "sync": "አመሳስል",
+  "syncNow": "አሁን አመሳስል",
+  "offline": "ከመስመር ውጭ",
+  "online": "መስመር ላይ",
+  "error": "ስህተት",
+  "success": "ተሳክቷል",
+  "noDataFound": "ምንም መረጃ አልተገኘም",
+  "basicInformation": "መሰረታዊ መረጃ",
+  "pullToRefresh": "ለማደስ ወደ ታች ይሳቡ",
+  "login": "ግባ",
+  "register": "ተመዝገብ",
+  "createAccount": "መለያ ፍጠር",
+  "forgotPassword": "የይለፍ ቃል ረሱ?",
+  "resetPassword": "የይለፍ ቃል ቀይር",
+  "email": "ኢሜይል",
+  "password": "የይለፍ ቃል",
+  "fullName": "ሙሉ ስም",
+  "phoneNumber": "ስልክ ቁጥር",
+  "confirmPassword": "የይለፍ ቃል አረጋግጥ",
+  "signInWithGoogle": "በጉግል ግባ",
+  "logout": "ውጣ",
+  "invalidEmail": "ትክክለኛ ያልሆነ ኢሜይል",
+  "passwordRequired": "የይለፍ ቃል ያስፈልጋል",
+  "passwordTooShort": "የይለፍ ቃሉ ቢያንስ 6 ፊደላት መሆን አለበት",
+  "projects": "ፕሮጀክቶች",
+  "selectProject": "ፕሮጀክት ምረጥ",
+  "createProject": "ፕሮጀክት ፍጠር",
+  "projectName": "የፕሮጀክት ስም",
+  "projectLocation": "የፕሮጀክት ቦታ",
+  "projectBudget": "የፕሮጀክት በጀት",
+  "projectManager": "የፕሮጀክት ስራ አስኪያጅ",
+  "officeEngineer": "የቢሮ መሃንዲስ",
+  "consultant": "አማካሪ",
+  "siteEngineer": "የሳይት መሃንዲስ",
+  "projectNotFound": "ፕሮጀክቱ አልተገኘም",
+  "noProjectAccess": "ይህን ፕሮጀክት ለማየት ፈቃድ የለህም",
+  "tasks": "ተግባራት",
+  "taskDetail": "የተግባር ዝርዝር",
+  "pending": "በመጠባበቅ ላይ",
+  "inProgress": "በሂደት ላይ",
+  "completed": "ተጠናቋል",
+  "progress": "አፈጻጸም",
+  "assignedTo": "ለማን ተሰጠ",
+  "startDate": "መጀመሪያ ቀን",
+  "endDate": "መጨረሻ ቀን",
+  "createDailyLog": "የቀን ሪፖርት ፍጠር",
+  "noTasksFound": "ምንም ተግባር አልተገኘም",
+  "teamManagement": "የቡድን አስተዳደር",
+  "projectMembers": "የፕሮጀክት አባላት",
+  "pendingInvitations": "የሚጠባበቁ ግብዣዎች",
+  "inviteMember": "አባል ጋብዝ",
+  "emailAddress": "ኢሜይል አድራሻ",
+  "selectRole": "የስራ ድርሻ ምረጥ",
+  "changeRole": "የስራ ድርሻ ቀይር",
+  "invitationSentSuccess": "ግብዣው በትክክል ተልኳል",
+  "errorMessage": "ስህተት ተከስቷል",
+  "dailyLogs": "የቀን ሪፖርቶች",
+  "dailyLogDetail": "የቀን ሪፖርት ዝርዝር",
+  "draft": "ረቂቅ",
+  "submitted": "ገብቷል",
+  "consultantApproved": "በአማካሪ የጸደቀ",
+  "approved": "የጸደቀ",
+  "rejected": "ውድቅ የተደረገ",
+  "weather": "የአየር ሁኔታ",
+  "siteConditions": "የሳይት ሁኔታዎች",
+  "notes": "ማስታወሻዎች",
+  "shift": "ፈረቃ",
+  "labor": "የጉልበት ሰራተኛ",
+  "materials": "ቁሳቁሶች",
+  "equipment": "መሳሪያዎች",
+  "workerType": "የሰራተኛ አይነት",
+  "hoursWorked": "የተሰሩ ሰዓታት",
+  "cost": "ዋጋ",
+  "quantity": "ብዛት",
+  "unit": "መለኪያ",
+  "saveDraft": "ረቂቅ አስቀምጥ",
+  "saveDraftAndSubmit": "ረቂቅ አስቀምጥና አስገባ",
+  "offlineDraft": "የመስመር ውጭ ረቂቅ",
+  "pendingSync": "መመሳሰል የሚጠባበቅ",
+  "approvalTimeline": "የማጽደቂያ የጊዜ መስመር",
+  "syncFailed": "መመሳሰል አልተሳካም",
+  "rejectionReason": "የውድቅ ምክንያት",
+  "submitLog": "ሪፖርት አስገባ",
+  "approveLog": "ሪፖርት አጽድቅ",
+  "rejectLog": "ሪፖርት ውድቅ አድርግ",
+  "finalApprove": "የመጨረሻ ማጽደቂያ",
+  "settings": "ቅንብሮች",
+  "profile": "መገለጫ",
+  "language": "ቋንቋ",
+  "theme": "ገጽታ",
+  "lightMode": "ቀን",
+  "darkMode": "ማታ",
+  "systemDefault": "የስልኩ ምርጫ",
+  "calendar": "ካላንደር",
+  "gregorianCalendar": "የፈረንጆች ካላንደር",
+  "ethiopianCalendar": "የኢትዮጵያ ካላንደር",
+  "currency": "ምንዛሬ",
+  "etb": "ብር",
+  "syncQueue": "የሚመሳሰሉ ዝርዝሮች",
+  "aboutConstructPro": "ስለ ኮንስትራክት ፕሮ",
+  "version": "ስሪት",
+  "youAreOffline": "ከመስመር ውጭ ነህ",
+  "cachedDataAvailable": "የተቀመጠ መረጃ አለ",
+  "actionRequiresInternet": "ይህ ተግባር ኢንተርኔት ያስፈልገዋል",
+  "draftSavedOffline": "ረቂቁ ከመስመር ውጭ ተቀምጧል",
+  "syncCompleted": "ማመሳሰል ተጠናቋል",
+  "retrySync": "ድጋሚ አመሳስል",
+  "invitationCreatedLocalExplanation": "ግብዣው ተፈጥሯል። በልማት ወቅት የኢሜይል መልዕክት ላይላክ ይችላል። የተጋበዘው ሰው በኢሜይል አድራሻው በመመዝገብ ወይም በመግባት ፕሮጀክቱን መቀላቀል ይችላል።",
+  "invitedUserAcceptanceExplanation": "የተጋበዙ ተጠቃሚዎች በተጋበዙበት ኢሜይል በመመዝገብ ወይም በመግባት ፕሮጀክቱን መቀላቀል ይችላሉ።",
+  "projectStatus": "የፕሮጀክት ሁኔታ",
+  "taskSummary": "የተግባር ማጠቃለያ",
+  "dailyLogSummary": "የቀን ሪፖርት ማጠቃለያ",
+  "pendingApprovals": "የሚጠባበቁ ማጽደቂያዎች",
+  "teamSummary": "የቡድን ማጠቃለያ",
+  "budgetSnapshot": "የበጀት እይታ",
+  "offlineSyncHealth": "የከመስመር ውጭ ማመሳሰል ሁኔታ",
+  "latestSiteConditions": "የቅርብ የሳይት ሁኔታዎች",
+  "projectOverview": "የፕሮጀክት አጠቃላይ እይታ",
+  "myAssignedTasks": "ለእኔ የተሰጡ ተግባራት",
+  "myDailyLogs": "የእኔ የቀን ሪፖርቶች",
+  "pendingSyncDrafts": "ማመሳሰል የሚጠባበቁ ረቂቆች",
+  "approvalQueue": "የማጽደቂያ ዝርዝር",
+  "logsAwaitingReview": "ግምገማ የሚጠባበቁ ሪፖርቶች",
+  "logsNeedingCompletenessCheck": "የሙሉነት ፍተሻ የሚፈልጉ ሪፖርቶች",
+  "logsNeedingCompletenessReview": "የሙሉነት ግምገማ የሚፈልጉ ሪፖርቶች",
+  "recentlyReviewed": "በቅርቡ የተገመገሙ",
+  "rejectedLogs": "ውድቅ የተደረጉ ሪፖርቶች",
+  "quickActions": "ፈጣን ተግባራት",
+  "projectInfo": "የፕሮጀክት መረጃ",
+  "couldNotVerifyRole": "የእርስዎን የስራ ድርሻ ማረጋገጽ አልተቻለም። እባክዎ ገጹን ያድሱ ወይም የፕሮጀክት ስራ አስኪያጁን ያነጋግሩ።",
+  "constructionManagementForField": "ለሳይት ስራ የተዘጋጀ የግንባታ አስተዳደር።",
+  "limitedOfflineMode": "የተገደበ ከመስመር ውጭ ሁነታ",
+  "logs": "ሪፖርቶች",
+  "more": "ተጨማሪ",
+  "notifications": "ማሳወቂያዎች",
+  "authLoginBrandHeadline": "የግንባታ ፕሮጀክቶችዎን በቀላሉ ያስተዳድሩ",
+  "authLoginBrandSubtitle": "ከአንድ ለሞባይል የተመቻቸ መድረክ የፕሮጀክት እድገትን ይከታተሉ፣ ቡድኖችን ያስተዳድሩ፣ እና የሳይት ሪፖርትን ያቀላጥፉ።",
+  "authSignupBrandHeadline": "ከብዙ የግንባታ ባለሙያዎች ጋር ይቀላቀሉ",
+  "authSignupBrandSubtitle": "መለያዎን ይፍጠሩና የግንባታ ፕሮጀክቶችዎን በውጤታማነት መቆጣጠር ይጀምሩ።",
+  "realTimeProjectTracking": "የፕሮጀክት እድገት በቀጥታ መከታተል",
+  "offlineDailyLogSupport": "ከመስመር ውጭ የቀን ሪፖርት ድጋፍ",
+  "streamlinedApprovalWorkflows": "የተቀላጠፈ የማጽደቂያ ሂደት",
+  "welcomeBack": "እንኳን ደህና ተመለሱ",
+  "loginSubtitle": "መለያዎን ለመክፈት መረጃዎን ያስገቡ",
+  "signupSubtitle": "ለመጀመር መረጃዎን ያስገቡ",
+  "signIn": "ግባ",
+  "signUp": "ተመዝገብ",
+  "dontHaveAccount": "መለያ የለዎትም?",
+  "alreadyHaveAccount": "አስቀድመው መለያ አለዎት?",
+  "backToSignIn": "ወደ መግቢያ ተመለስ",
+  "forgotPasswordSubtitle": "ኢሜይልዎን ያስገቡ፣ የመቀየሪያ መመሪያ እንልክልዎታለን።",
+  "sendResetLink": "የመቀየሪያ አገናኝ ላክ",
+  "resetPasswordSubtitle": "ለመለያዎ አዲስ የይለፍ ቃል ይፍጠሩ።",
+  "newPassword": "አዲስ የይለፍ ቃል",
+  "pleaseEnterEmail": "እባክዎ ኢሜይልዎን ያስገቡ",
+  "pleaseEnterValidEmail": "እባክዎ ትክክለኛ ኢሜይል ያስገቡ",
+  "pleaseEnterPassword": "እባክዎ የይለፍ ቃል ያስገቡ",
+  "pleaseConfirmPassword": "እባክዎ የይለፍ ቃልዎን ያረጋግጡ",
+  "pleaseEnterName": "እባክዎ ስምዎን ያስገቡ",
+  "passwordsDoNotMatch": "የይለፍ ቃሎቹ አይመሳሰሉም",
+  "invalidPhoneNumber": "ትክክለኛ የኢትዮጵያ ስልክ ቁጥር ያስገቡ",
+  "loginFailed": "መግባት አልተሳካም",
+  "registrationFailed": "መመዝገብ አልተሳካም",
+  "resetLinkSentMessage": "በዚህ አካባቢ የኢሜይል መላክ ከተነቃ መመሪያው ወደዚህ አድራሻ ይላካል።",
+  "resetPasswordSuccess": "የይለፍ ቃልዎ ተቀይሯል። በአዲሱ የይለፍ ቃል መግባት ይችላሉ።",
+  "constructProCopyright": "© 2026 ኮንስትራክት ፕሮ",
+  "home": "መነሻ",
+  "account": "መለያ",
+  "all": "ሁሉም",
+  "amharic": "አማርኛ",
+  "appearance": "አልባም",
+  "appearanceAndPreferences": "አልባም እና ምርጫዎች",
+  "appVersion": "የመተግበሪያ ስሪት",
+  "attempts": "{count} ጊዜ ተከናከሉ",
+  "@attempts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "browserSyncLimitedMessage": "የአሳሽ ማከማቻ በዚህ መሳሪያ ላይ የተገደበ የከመስመር ውጭ ማመሳሰል ዝርዝር ይደግፋል።",
+  "consultants": "አማካሪዎች",
+  "contractors": "ኮንትራተሮች",
+  "creatingRecord": "መዝገብ በመፍጠር ላይ",
+  "dependencies": "ተጠቃሚ ነገሮች",
+  "description": "ማብራርያ",
+  "developerInfo": "የገንቢው መረጃ",
+  "english": "እንግሊዝኛ",
+  "environment": "አካባቢ",
+  "failed": "አልተሳካም",
+  "invitationCreated": "ግብዣ ተፈጥሯል",
+  "invitationExplanation": "በኢሜይል የሳይት እና የቢሮ ተጠቃሚዎችን ጋብዝ። የእርስዎ መዳረሻ የተመረጠውን የፕሮጀክት ስራ ይመስላል።",
+  "manageContractors": "የፕሮጀክት ኮንትራተሮችን ያስተዳድሩ",
+  "moreMenuSubtitle": "የፕሮጀክት እቃዎች፣ መለያ፣ እና የከመስመር ውጭ ቁግዝጎች",
+  "none": "ምንም",
+  "noTasksForFilter": "ምንም ተግባር የዚህ አጣራ አይዛመዝም።",
+  "noTasksFoundMessage": "ለዚህ ፕሮጀክት የተሰጡ ተግባራት እዚህ ይታያሉ።",
+  "noTeamMembers": "የቡድን አባላት ገና የሉም",
+  "noTeamMembersMessage": "ለመጀመር መስራት የመጀመሪያዎን የፕሮጀክት አባል ጋብዝ።",
+  "notSet": "አልተመዘገበም",
+  "ok": "እሺ",
+  "profileSubtitle": "የመለያ ዝርዝሮች እና የአሁን ፕሮጀክት መዳረሻ",
+  "projectManagers": "የፕሮጀክት ስራ አስኪያጆች",
+  "projectSettings": "የፕሮጀክት ቅንብሮች",
+  "projectSettingsMobileNote": "የፕሮጀክት ቅንብሮች ከሙሉ የስራ ቦታ ይገኛሉ። ሞባይል ወሳኝ የፕሮጀክት እቃዎችን በቅርብ ያቀርባል።",
+  "readOnly": "ለማንበብ ብቻ",
+  "removeMember": "አባል አስወግድ",
+  "removeMemberConfirm": "{name} ከዚህ ፕሮጀክት ይወግድ?",
+  "@removeMemberConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "role": "ስራ",
+  "saveProgress": "ያስቀምጥ",
+  "sendInvitation": "ግብዣ ላክ",
+  "signOutOfAccount": "ከዚህ መለያ ውጣ",
+  "siteEngineers": "የሳይት መሃንዲሶች",
+  "synced": "ተመሳስሏል",
+  "syncItemFailedMessage": "ይህ እቃ ሊመሳሰል አልቻለም። በግንኙነት ያለውን ጊዜ ድጋሜ ይሞክሩ።",
+  "syncQueueEmpty": "የማመሳሰል ዝርዝር ባዶ ነው",
+  "syncQueueEmptyMessage": "የከመስመር ውጭ ረቂቆች እና የሚጠባበቁ ዝማኔዎች ከመመሳሰላቸው በፊት እዚህ ይታያሉ።",
+  "syncQueueSubtitle": "የከመስመር ውጭ ስራ ይመለከቱ እና የተሳኩትን ማመሳሰል ድጋሚ ይሞክሩ",
+  "syncQueueUnavailable": "የማመሳሰል ዝርዝር የለም",
+  "syncQueueUnavailableMessage": "የአካባቢውን የማመሳሰል ዝርዝር በአሁን ጊዜ መጫን አልቻልንም።",
+  "taskListSubtitle": "ስራዎችን፣ ሁኔታን፣ እና አፈጻጸምን ይከታተሩ",
+  "tasksReadOnly": "ተግባራት",
+  "team": "ቡድን",
+  "teamMembers": "የቡድን አባላት",
+  "teamReadOnly": "ቡድን",
+  "totalMembers": "ጠቅላላ አባላት",
+  "totalTasks": "ጠቅላላ ተግባራት",
+  "unassigned": "ያልተሰጠ",
+  "updateProgress": "ያዘምኑ",
+  "updatingRecord": "መዝገብ በማዘምን ላይ",
+  "viewProjectContext": "የፕሮጀክት አንቀፅ ይመልከቱ",
+  "viewSyncQueue": "የማመሳሰል ዝርዝር ይመልከቱ",
+  "selectLanguage": "ቋንቋ ምረጥ",
+  "languageChanged": "ቋንቋ ወደ {language} ተቀይሯል",
+  "@languageChanged": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "validationError": "እባክዎ ስለዛሬ ቀን ስራውን ማስታወሻ ያስገቡ። ይህ መስክ ያስፈልጋል።",
+  "validationErrorShift": "እባክዎ ለየቀን ሪፖርትዎ ቢያንስ አንድ ፈረቃ (ቀን/ማታ) ያክሉ።",
+  "validationErrorLaborType": "የጉልበት ሰራተኛ መዝገብ {index}: የሰራተኛው አይነት ያስፈልጋል።",
+  "@validationErrorLaborType": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "validationErrorLaborHours": "የጉልበት ሰራተኛ መዝገብ {index}: የተሰሩት ሰዓታት ከዜሮ መሆን ያስፈልጋል።",
+  "@validationErrorLaborHours": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "validationErrorLaborCost": "የጉልበት ሰራተኛ መዝገብ {index}: ዋጋ አሉኖም መሆን አይችልም።",
+  "@validationErrorLaborCost": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "validationErrorMaterialName": "የቁሳቁስ መዝገብ {index}: የቁሳቁሱ ስም ያስፈልጋል።",
+  "@validationErrorMaterialName": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "validationErrorMaterialQuantity": "የቁሳቁስ መዝገብ {index}: ብዛቱ ከዜሮ መሆን ያስፈልጋል።",
+  "@validationErrorMaterialQuantity": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "validationErrorMaterialUnit": "የቁሳቁስ መዝገብ {index}: መለኪያ ያስፈልጋል (ለምሳል: ኪግራም, ሜትር, ክፍሎች)",
+  "@validationErrorMaterialUnit": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "validationErrorMaterialCost": "የቁሳቁስ መዝገብ {index}: ዋጋ አሉኖም መሆን አይችልም።",
+  "@validationErrorMaterialCost": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "validationErrorEquipmentName": "የመሳሪያ መዝገብ {index}: የመሳሪያው ስም ያስፈልጋል።",
+  "@validationErrorEquipmentName": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "validationErrorEquipmentHours": "የመሳሪያ መዝገብ {index}: የተጠቀሙት ሰዓታት ከዜሮ መሆን ያስፈልጋል።",
+  "@validationErrorEquipmentHours": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "validationErrorEquipmentCost": "የመሳሪያ መዝገብ {index}: ዋጋ አሉኖም መሆን አይችልም።",
+  "@validationErrorEquipmentCost": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "validationErrorShiftType": "የፈረቃ መዝገብ {index}: የፈረቃው አይነት ያስፈልጋል (ለምሳል: ቀን, ማታ)",
+  "@validationErrorShiftType": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "validationErrorStepNotes": "እባክዎ ስለመቀጣት ለመቀጣት ስለዛሬ ቀን ስራውን ማስታወሻ ያስገቡ።",
+  "validationErrorStepShift": "እባክዎ ስለመቀጣት ለመቀጣት ለየቀን ሪፖርትዎ ቢያንስ አንድ ፈረቃ (ቀን/ማታ) ያክሉ።"
+}

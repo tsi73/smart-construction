@@ -3,6 +3,8 @@ class EndPoints {
   static const String template = "template/";
   static const String user = "users/";
   static const String post = "posts/";
+  static const String messages = 'messages';
+  static String markMessageRead(String id) => 'messages/$id/read';
 }
 
 class ApiKey {

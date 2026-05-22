@@ -1,33 +1,31 @@
-import 'dart:convert';
-import '../../../core/databases/cache/cache_helper.dart';
-import '../../../core/errors/expentions.dart';
+import '../../../../core/databases/cache/cache_helper.dart';
+import '../../../../core/errors/expentions.dart';
 import '../models/template_model.dart';
 
-class TemplateLocalDataSource {
-  final CacheHelper cache;
-  final String key = "CachedTemplate";
-  TemplateLocalDataSource({required this.cache});
+abstract class TemplateLocalDataSource {
+  Future<void> cacheTemplate(TemplateModel templateToCache);
+  Future<TemplateModel> getLastTemplate();
+}
 
-  cacheTemplate(TemplateModel? templateToCache) {
-    if (templateToCache != null) {
-      cache.saveData(
-        key: key,
-        value: json.encode(
-          templateToCache.toJson(),
-        ),
-      );
-    } else {
-      throw CacheExeption(errorMessage: "No Internet Connection");
-    }
+class TemplateLocalDataSourceImpl implements TemplateLocalDataSource {
+  final CacheHelper cacheHelper;
+  TemplateLocalDataSourceImpl({required this.cacheHelper});
+
+  @override
+  Future<void> cacheTemplate(TemplateModel templateToCache) {
+    return cacheHelper.saveData(
+      key: "Template",
+      value: templateToCache.toJson(),
+    );
   }
 
+  @override
   Future<TemplateModel> getLastTemplate() {
-    final jsonString = cache.getDataString(key: key);
-
+    final jsonString = cacheHelper.getData(key: "Template");
     if (jsonString != null) {
-      return Future.value(TemplateModel.fromJson(json.decode(jsonString)));
+      return Future.value(TemplateModel.fromJson(jsonString));
     } else {
-      throw CacheExeption(errorMessage: "No Internet Connection");
+      throw CacheExeption(errorMessage: "No Template Cached");
     }
   }
 }

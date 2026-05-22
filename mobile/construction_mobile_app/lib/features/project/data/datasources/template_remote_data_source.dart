@@ -1,14 +1,14 @@
-import '../../../core/databases/api/api_consumer.dart';
-import '../../../core/databases/api/end_points.dart';
-import '../../../core/params/params.dart';
+import 'package:dio/dio.dart';
 import '../models/template_model.dart';
+import '../../domain/repositories/template_repository.dart';
 
 class TemplateRemoteDataSource {
-  final ApiConsumer api;
+  final Dio dio;
 
-  TemplateRemoteDataSource({required this.api});
+  TemplateRemoteDataSource({required this.dio});
+
   Future<TemplateModel> getTemplate(TemplateParams params) async {
-    final response = await api.get("${EndPoints.template}/${params.id}");
-    return TemplateModel.fromJson(response);
+    final response = await dio.get("/templates/${params.templateId}");
+    return TemplateModel.fromJson(response.data);
   }
 }
