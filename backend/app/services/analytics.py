@@ -326,37 +326,39 @@ async def compute_labor_productivity_trend(db: AsyncSession, project_id: UUID, l
 
 async def compute_material_burn_rate(db: AsyncSession, project: Project, project_id: UUID) -> MaterialBurnRate:
     """
-    Material cost consumed vs allocated, with days until exhaustion.
+    Material + equipment cost actually consumed per active working day.
+    Uses real log data — no estimates or hardcoded percentages.
     """
     logs_res = await db.execute(select(DailyLog).where(DailyLog.project_id == project_id))
-    log_ids = [l.id for l in logs_res.scalars().all()]
+    logs = list(logs_res.scalars().all())
+    log_ids = [l.id for l in logs]
 
     if not log_ids:
         return {
             "total_consumed": 0.0,
-            "total_allocated": 0.0,
+            "total_allocated": float(project.total_budget or 0.0),
             "burn_rate_per_day": 0.0,
             "days_until_exhaustion": None,
             "days_remaining_in_project": 0,
             "status": "no_data",
-            "message": "No material data available",
+            "message": "No log data available",
         }
 
     materials_res = await db.execute(select(Material).where(Material.log_id.in_(log_ids)))
     materials = list(materials_res.scalars().all())
+    equipment_res = await db.execute(select(Equipment).where(Equipment.log_id.in_(log_ids)))
+    equipment = list(equipment_res.scalars().all())
 
-    total_consumed = sum(float(m.cost or 0.0) for m in materials)
-    
-    # Estimate material allocation as 40% of total budget
-    total_allocated = float(project.total_budget or 0.0) * 0.4
+    material_cost = sum(float(m.cost or 0.0) for m in materials)
+    equipment_cost = sum(float(e.cost or 0.0) for e in equipment)
+    total_consumed = material_cost + equipment_cost
 
-    # Calculate burn rate (cost per day)
-    if project.planned_start_date:
-        start = project.planned_start_date.replace(tzinfo=timezone.utc) if not project.planned_start_date.tzinfo else project.planned_start_date
-        days_elapsed = max(1, (datetime.now(timezone.utc) - start).days)
-        burn_rate_per_day = total_consumed / days_elapsed
-    else:
-        burn_rate_per_day = 0.0
+    # Use total project budget as the allocation baseline (real, not estimated)
+    total_allocated = float(project.total_budget or 0.0)
+
+    # Burn rate: total spent / number of distinct days that had logs (actual working days)
+    active_days = len({l.date.date() if hasattr(l.date, 'date') else l.date for l in logs if l.date})
+    burn_rate_per_day = total_consumed / max(1, active_days) if total_consumed > 0 else 0.0
 
     # Days until exhaustion
     remaining_budget = total_allocated - total_consumed

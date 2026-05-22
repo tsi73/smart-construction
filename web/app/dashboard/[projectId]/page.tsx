@@ -921,7 +921,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Package className="h-4 w-4 text-muted-foreground" />
-                          <CardTitle className="text-sm font-semibold">Material Burn Rate</CardTitle>
+                          <CardTitle className="text-sm font-semibold">Material & Equipment Spend</CardTitle>
                         </div>
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${t.badge}`}>
                           {m.status.replace('_', ' ')}
@@ -942,13 +942,13 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                         </BarChart>
                       </ChartContainer>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{formatBudget(m.total_consumed)} used ({consumedPct.toFixed(0)}%)</span>
-                        <span>{formatBudget(m.total_allocated)} budget</span>
+                        <span>{formatBudget(m.total_consumed)} spent ({consumedPct.toFixed(0)}%)</span>
+                        <span>{formatBudget(m.total_allocated)} total budget</span>
                       </div>
 
                       <div className="mt-1 space-y-1">
                         <p className="text-xs font-medium text-foreground">
-                          {formatBudget(m.burn_rate_per_day)}<span className="font-normal text-muted-foreground">/day</span>
+                          {formatBudget(m.burn_rate_per_day)}<span className="font-normal text-muted-foreground">/working day</span>
                         </p>
                         {m.days_until_exhaustion !== null && m.days_remaining_in_project > 0 && (() => {
                           const max = Math.max(m.days_until_exhaustion, m.days_remaining_in_project, 1)
