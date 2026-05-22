@@ -89,6 +89,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   const [editStartDate, setEditStartDate] = useState('')
   const [editEndDate, setEditEndDate] = useState('')
   const [editWeight, setEditWeight] = useState('')
+  const [editBudget, setEditBudget] = useState('')
   const [editAssignee, setEditAssignee] = useState<string | null>(null)
   const [assigneePopoverOpen, setAssigneePopoverOpen] = useState(false)
 
@@ -124,6 +125,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
           setEditStartDate(t.start_date ? t.start_date.split('T')[0] : '')
           setEditEndDate(t.end_date ? t.end_date.split('T')[0] : '')
           setEditWeight(String(t.weight ?? 0))
+          setEditBudget(t.allocated_budget != null ? String(t.allocated_budget) : '')
           setEditAssignee(t.assigned_to ?? null)
         } catch {
           if (!cancelled) setError(t('taskDetailPage.taskNotFound'))
@@ -146,6 +148,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
           start_date: editStartDate ? `${editStartDate}T00:00:00` : undefined,
           end_date: editEndDate ? `${editEndDate}T00:00:00` : undefined,
           weight: Number.parseFloat(editWeight) || 0,
+          budget: editBudget ? Number.parseFloat(editBudget) : undefined,
           assigned_to: editAssignee || undefined,
         }
         : {
@@ -186,7 +189,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   }
 
   return (
-    <div className="space-y-6 px-6">
+    <div className="space-y-6 pb-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.push(`/dashboard/${projectId}/tasks`)}>
           <ArrowLeft className="h-5 w-5" />
@@ -208,6 +211,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
               setEditStartDate(task.start_date ? task.start_date.split('T')[0] : '')
               setEditEndDate(task.end_date ? task.end_date.split('T')[0] : '')
               setEditWeight(String(task.weight ?? 0))
+              setEditBudget(task.allocated_budget != null ? String(task.allocated_budget) : '')
               setEditAssignee(task.assigned_to ?? null)
             }}>
               <X className="h-4 w-4" />
@@ -269,6 +273,20 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                     {t('taskDetailPage.weightDesc')}
                   </p>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Allocated Budget (ETB)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={1000}
+                  placeholder="e.g. 500000"
+                  value={editBudget}
+                  onChange={(e) => setEditBudget(e.target.value)}
+                  disabled={!editing || !canEdit}
+                />
+                <p className="text-xs text-muted-foreground">Budget allocated for this task</p>
               </div>
 
               <div className="space-y-2">

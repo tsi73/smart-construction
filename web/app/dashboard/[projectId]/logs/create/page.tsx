@@ -185,9 +185,10 @@ export default function CreateLogPage({ params }: CreateLogPageProps) {
     }
 
     const calculateEquipmentTotal = (entry: EquipmentEntry) => {
+        const quantity = Number(entry.quantity) || 0
         const operationTime = Number(entry.operation_time) || 0
         const costPerUnit = Number(entry.cost_per_unit) || 0
-        return operationTime * costPerUnit
+        return quantity * operationTime * costPerUnit
     }
 
     const totalHumanResourceCost = humanResources.reduce((sum, entry) => sum + calculateHumanResourceTotal(entry), 0)
